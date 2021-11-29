@@ -14,47 +14,29 @@ class Model:
 		""" State Enum
 		"""
 		(
-			robot_control_awaiting_input,
-			robot_control_automatic_mode,
-			robot_control_automatic_mode_start_pos_set_zero_find_origin,
-			robot_control_automatic_mode_start_pos_set_zero_rotate_towards_center_of_cell,
-			robot_control_automatic_mode_start_pos_set_zero_move_towards_center_of_cell,
-			robot_control_automatic_mode_start_pos_set_zero_done_,
-			robot_control_automatic_mode_start_pos_set_zero_keep_distance_from_wall,
-			robot_control_automatic_mode_start_pos_set_zero_move_towards_wall,
-			robot_control_automatic_mode_start_pos_set_zero_move_forward_a_bit,
-			robot_control_automatic_mode_start_pos_set_zero_realign,
-			robot_control_automatic_mode_start_pos_set_zero_drive_forward,
-			robot_control_automatic_mode_start_pos_set_zero_realign_right,
+			manual_control_component_awaiting_input,
+			manual_control_component_automatic_mode,
+			logging_unit_startup,
+			logging_unit_manual,
+			logging_unit_retrieve_current_state,
+			logging_unit_check_current_walls,
+			driving_component_diriving,
+			driving_component_diriving_r1align,
+			driving_component_diriving_r1iteration,
+			driving_component_diriving_r1rotate_left,
+			driving_component_diriving_r1move_forward,
+			driving_component_manual,
+			logic_component_manual,
+			logic_component_maze_algorithm,
+			logic_component_maze_algorithm_r1setup,
+			logic_component_maze_algorithm_r1find_target_alignment,
+			logic_component_maze_algorithm_r1realign,
+			logic_component_maze_algorithm_r1move_forward,
+			alignment_alignment_unit,
+			alignment_alignment_off,
 			null_state
-		) = range(13)
+		) = range(21)
 	
-	
-	class UserVar:
-		"""Implementation of scope UserVar.
-		"""
-		
-		def __init__(self, statemachine):
-			self.limit_degree_high = None
-			self.limit_degree_low = None
-			self.base_speed = None
-			self.base_rotation = None
-			self.turn_type = None
-			self.limit_type = None
-			self.xrow = None
-			self.ycol = None
-			self.xabs = None
-			self.yabs = None
-			self.abs_dis = None
-			self.startprocedure = None
-			self.straight_offset = None
-			self.aligned = None
-			self.ave_off = None
-			self.off_back = None
-			self.straighten = None
-			
-			self.statemachine = statemachine
-		
 	
 	class BaseValues:
 		"""Implementation of scope BaseValues.
@@ -292,7 +274,6 @@ class Model:
 	def __init__(self):
 		""" Declares all necessary variables including list of states, histories etc. 
 		"""
-		self.user_var = Model.UserVar(self)
 		self.base_values = Model.BaseValues(self)
 		self.output = Model.Output(self)
 		self.grid = Model.Grid(self)
@@ -303,36 +284,60 @@ class Model:
 		self.laser_distance = Model.LaserDistance(self)
 		self.laser_intensity = Model.LaserIntensity(self)
 		
+		self.__internal_event_queue = queue.Queue()
 		self.in_event_queue = queue.Queue()
+		self.__base_speed = None
+		self.__base_rotation = None
+		self.__limit_degree_low = None
+		self.__limit_degree_high = None
+		self.__current_x = None
+		self.__current_y = None
+		self.__current_cell_x = None
+		self.__current_cell_y = None
+		self.__target_x = None
+		self.__target_y = None
+		self.__target_orientation = None
+		self.__startprocedure = None
+		self.__target_yaw = None
+		self.__aligned = None
+		self.tick = None
+		self.automatic_mode = None
+		self.manual_mode = None
+		self.align_rotation = None
+		self.turn_left = None
+		self.turn_right = None
+		self.move_forward = None
+		self.turned = None
+		self.rotation_aligned = None
+		self.moved_forward = None
+		self.logged = None
+		
 		# enumeration of all states:
 		self.__State = Model.State
 		self.__state_conf_vector_changed = None
-		self.__state_vector = [None] * 1
-		for __state_index in range(1):
+		self.__state_vector = [None] * 5
+		for __state_index in range(5):
 			self.__state_vector[__state_index] = self.State.null_state
 		
 		# for timed statechart:
 		self.timer_service = None
-		self.__time_events = [None] * 4
+		self.__time_events = [None] * 2
 		
 		# initializations:
-		self.user_var.limit_degree_high = 0.0
-		self.user_var.limit_degree_low = 0.0
-		self.user_var.base_speed = 0.05
-		self.user_var.base_rotation = 0.2
-		self.user_var.turn_type = 0
-		self.user_var.limit_type = 0
-		self.user_var.xrow = 0
-		self.user_var.ycol = 0
-		self.user_var.xabs = 0
-		self.user_var.yabs = 0
-		self.user_var.abs_dis = 0
-		self.user_var.startprocedure = True
-		self.user_var.straight_offset = 0.0
-		self.user_var.aligned = False
-		self.user_var.ave_off = 0
-		self.user_var.off_back = 0
-		self.user_var.straighten = False
+		self.__base_speed = 0.05
+		self.__base_rotation = 0.2
+		self.__limit_degree_low = 3
+		self.__limit_degree_high = 5
+		self.__current_x = 0.0
+		self.__current_y = 0.0
+		self.__current_cell_x = 0.0
+		self.__current_cell_y = 0.0
+		self.__target_x = 0.0
+		self.__target_y = 0.0
+		self.__target_orientation = 0
+		self.__startprocedure = True
+		self.__target_yaw = 0.0
+		self.__aligned = False
 		self.base_values.max_speed = 0.22
 		self.base_values.max_rotation = 2.84
 		self.base_values.degrees_front = 10
@@ -414,11 +419,12 @@ class Model:
 		self.laser_intensity.ileft_max = 0.0
 		self.laser_intensity.ileft_mean = 0.0
 		self.__is_executing = False
+		self.__state_conf_vector_position = None
 	
 	def is_active(self):
 		"""Checks if the state machine is active.
 		"""
-		return self.__state_vector[0] is not self.__State.null_state
+		return self.__state_vector[0] is not self.__State.null_state or self.__state_vector[1] is not self.__State.null_state or self.__state_vector[2] is not self.__State.null_state or self.__state_vector[3] is not self.__State.null_state or self.__state_vector[4] is not self.__State.null_state
 	
 	def is_final(self):
 		"""Checks if the statemachine is final.
@@ -430,37 +436,54 @@ class Model:
 		"""Checks if the state is currently active.
 		"""
 		s = state
-		if s == self.__State.robot_control_awaiting_input:
-			return self.__state_vector[0] == self.__State.robot_control_awaiting_input
-		if s == self.__State.robot_control_automatic_mode:
-			return (self.__state_vector[0] >= self.__State.robot_control_automatic_mode)\
-				and (self.__state_vector[0] <= self.__State.robot_control_automatic_mode_start_pos_set_zero_realign_right)
-		if s == self.__State.robot_control_automatic_mode_start_pos_set_zero_find_origin:
-			return self.__state_vector[0] == self.__State.robot_control_automatic_mode_start_pos_set_zero_find_origin
-		if s == self.__State.robot_control_automatic_mode_start_pos_set_zero_rotate_towards_center_of_cell:
-			return self.__state_vector[0] == self.__State.robot_control_automatic_mode_start_pos_set_zero_rotate_towards_center_of_cell
-		if s == self.__State.robot_control_automatic_mode_start_pos_set_zero_move_towards_center_of_cell:
-			return self.__state_vector[0] == self.__State.robot_control_automatic_mode_start_pos_set_zero_move_towards_center_of_cell
-		if s == self.__State.robot_control_automatic_mode_start_pos_set_zero_done_:
-			return self.__state_vector[0] == self.__State.robot_control_automatic_mode_start_pos_set_zero_done_
-		if s == self.__State.robot_control_automatic_mode_start_pos_set_zero_keep_distance_from_wall:
-			return self.__state_vector[0] == self.__State.robot_control_automatic_mode_start_pos_set_zero_keep_distance_from_wall
-		if s == self.__State.robot_control_automatic_mode_start_pos_set_zero_move_towards_wall:
-			return self.__state_vector[0] == self.__State.robot_control_automatic_mode_start_pos_set_zero_move_towards_wall
-		if s == self.__State.robot_control_automatic_mode_start_pos_set_zero_move_forward_a_bit:
-			return self.__state_vector[0] == self.__State.robot_control_automatic_mode_start_pos_set_zero_move_forward_a_bit
-		if s == self.__State.robot_control_automatic_mode_start_pos_set_zero_realign:
-			return self.__state_vector[0] == self.__State.robot_control_automatic_mode_start_pos_set_zero_realign
-		if s == self.__State.robot_control_automatic_mode_start_pos_set_zero_drive_forward:
-			return self.__state_vector[0] == self.__State.robot_control_automatic_mode_start_pos_set_zero_drive_forward
-		if s == self.__State.robot_control_automatic_mode_start_pos_set_zero_realign_right:
-			return self.__state_vector[0] == self.__State.robot_control_automatic_mode_start_pos_set_zero_realign_right
+		if s == self.__State.manual_control_component_awaiting_input:
+			return self.__state_vector[0] == self.__State.manual_control_component_awaiting_input
+		if s == self.__State.manual_control_component_automatic_mode:
+			return self.__state_vector[0] == self.__State.manual_control_component_automatic_mode
+		if s == self.__State.logging_unit_startup:
+			return self.__state_vector[1] == self.__State.logging_unit_startup
+		if s == self.__State.logging_unit_manual:
+			return self.__state_vector[1] == self.__State.logging_unit_manual
+		if s == self.__State.logging_unit_retrieve_current_state:
+			return self.__state_vector[1] == self.__State.logging_unit_retrieve_current_state
+		if s == self.__State.logging_unit_check_current_walls:
+			return self.__state_vector[1] == self.__State.logging_unit_check_current_walls
+		if s == self.__State.driving_component_diriving:
+			return (self.__state_vector[2] >= self.__State.driving_component_diriving)\
+				and (self.__state_vector[2] <= self.__State.driving_component_diriving_r1move_forward)
+		if s == self.__State.driving_component_diriving_r1align:
+			return self.__state_vector[2] == self.__State.driving_component_diriving_r1align
+		if s == self.__State.driving_component_diriving_r1iteration:
+			return self.__state_vector[2] == self.__State.driving_component_diriving_r1iteration
+		if s == self.__State.driving_component_diriving_r1rotate_left:
+			return self.__state_vector[2] == self.__State.driving_component_diriving_r1rotate_left
+		if s == self.__State.driving_component_diriving_r1move_forward:
+			return self.__state_vector[2] == self.__State.driving_component_diriving_r1move_forward
+		if s == self.__State.driving_component_manual:
+			return self.__state_vector[2] == self.__State.driving_component_manual
+		if s == self.__State.logic_component_manual:
+			return self.__state_vector[3] == self.__State.logic_component_manual
+		if s == self.__State.logic_component_maze_algorithm:
+			return (self.__state_vector[3] >= self.__State.logic_component_maze_algorithm)\
+				and (self.__state_vector[3] <= self.__State.logic_component_maze_algorithm_r1move_forward)
+		if s == self.__State.logic_component_maze_algorithm_r1setup:
+			return self.__state_vector[3] == self.__State.logic_component_maze_algorithm_r1setup
+		if s == self.__State.logic_component_maze_algorithm_r1find_target_alignment:
+			return self.__state_vector[3] == self.__State.logic_component_maze_algorithm_r1find_target_alignment
+		if s == self.__State.logic_component_maze_algorithm_r1realign:
+			return self.__state_vector[3] == self.__State.logic_component_maze_algorithm_r1realign
+		if s == self.__State.logic_component_maze_algorithm_r1move_forward:
+			return self.__state_vector[3] == self.__State.logic_component_maze_algorithm_r1move_forward
+		if s == self.__State.alignment_alignment_unit:
+			return self.__state_vector[4] == self.__State.alignment_alignment_unit
+		if s == self.__State.alignment_alignment_off:
+			return self.__state_vector[4] == self.__State.alignment_alignment_off
 		return False
 		
 	def time_elapsed(self, event_id):
 		"""Add time events to in event queue
 		"""
-		if event_id in range(4):
+		if event_id in range(2):
 			self.in_event_queue.put(lambda: self.raise_time_event(event_id))
 			self.run_cycle()
 	
@@ -473,535 +496,1001 @@ class Model:
 		func()
 	
 	def __get_next_event(self):
+		if not self.__internal_event_queue.empty():
+			return self.__internal_event_queue.get()
 		if not self.in_event_queue.empty():
 			return self.in_event_queue.get()
 		return None
 	
-	def __entry_action_robot_control_automatic_mode__start_pos_set_zero__find_origin(self):
-		"""Entry action for state 'Find origin'..
+	
+	def raise_tick(self):
+		"""Raise method for event tick.
 		"""
-		self.output.speed = 0.1
+		self.__internal_event_queue.put(self.__raise_tick_call)
+	
+	def __raise_tick_call(self):
+		"""Raise callback for event tick.
+		"""
+		self.tick = True
+	
+	def raise_automatic_mode(self):
+		"""Raise method for event automatic_mode.
+		"""
+		self.__internal_event_queue.put(self.__raise_automatic_mode_call)
+	
+	def __raise_automatic_mode_call(self):
+		"""Raise callback for event automatic_mode.
+		"""
+		self.automatic_mode = True
+	
+	def raise_manual_mode(self):
+		"""Raise method for event manual_mode.
+		"""
+		self.__internal_event_queue.put(self.__raise_manual_mode_call)
+	
+	def __raise_manual_mode_call(self):
+		"""Raise callback for event manual_mode.
+		"""
+		self.manual_mode = True
+	
+	def raise_align_rotation(self):
+		"""Raise method for event align_rotation.
+		"""
+		self.__internal_event_queue.put(self.__raise_align_rotation_call)
+	
+	def __raise_align_rotation_call(self):
+		"""Raise callback for event align_rotation.
+		"""
+		self.align_rotation = True
+	
+	def raise_turn_left(self):
+		"""Raise method for event turn_left.
+		"""
+		self.__internal_event_queue.put(self.__raise_turn_left_call)
+	
+	def __raise_turn_left_call(self):
+		"""Raise callback for event turn_left.
+		"""
+		self.turn_left = True
+	
+	def raise_turn_right(self):
+		"""Raise method for event turn_right.
+		"""
+		self.__internal_event_queue.put(self.__raise_turn_right_call)
+	
+	def __raise_turn_right_call(self):
+		"""Raise callback for event turn_right.
+		"""
+		self.turn_right = True
+	
+	def raise_move_forward(self):
+		"""Raise method for event move_forward.
+		"""
+		self.__internal_event_queue.put(self.__raise_move_forward_call)
+	
+	def __raise_move_forward_call(self):
+		"""Raise callback for event move_forward.
+		"""
+		self.move_forward = True
+	
+	def raise_turned(self):
+		"""Raise method for event turned.
+		"""
+		self.__internal_event_queue.put(self.__raise_turned_call)
+	
+	def __raise_turned_call(self):
+		"""Raise callback for event turned.
+		"""
+		self.turned = True
+	
+	def raise_rotation_aligned(self):
+		"""Raise method for event rotation_aligned.
+		"""
+		self.__internal_event_queue.put(self.__raise_rotation_aligned_call)
+	
+	def __raise_rotation_aligned_call(self):
+		"""Raise callback for event rotation_aligned.
+		"""
+		self.rotation_aligned = True
+	
+	def raise_moved_forward(self):
+		"""Raise method for event moved_forward.
+		"""
+		self.__internal_event_queue.put(self.__raise_moved_forward_call)
+	
+	def __raise_moved_forward_call(self):
+		"""Raise callback for event moved_forward.
+		"""
+		self.moved_forward = True
+	
+	def raise_logged(self):
+		"""Raise method for event logged.
+		"""
+		self.__internal_event_queue.put(self.__raise_logged_call)
+	
+	def __raise_logged_call(self):
+		"""Raise callback for event logged.
+		"""
+		self.logged = True
+	
+	def __entry_action_manual_control_component_awaiting_input(self):
+		"""Entry action for state 'Awaiting input'..
+		"""
+		self.raise_manual_mode()
 		self.output.rotation = 0.0
-		
-	def __entry_action_robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell(self):
-		"""Entry action for state 'Rotate towards center of cell'..
-		"""
-		self.output.rotation = -0.2
 		self.output.speed = 0.0
 		
-	def __entry_action_robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell(self):
-		"""Entry action for state 'Move towards center of cell'..
+	def __entry_action_manual_control_component_automatic_mode(self):
+		"""Entry action for state 'Automatic mode'..
 		"""
-		self.output.rotation = 0.0
-		self.output.speed = 0.1
+		self.raise_automatic_mode()
 		
-	def __entry_action_robot_control_automatic_mode__start_pos_set_zero__done_(self):
-		"""Entry action for state 'Done?'..
+	def __entry_action_logging_unit_startup(self):
+		"""Entry action for state 'Startup'..
 		"""
-		self.output.speed = 0.0
-		self.start_pos.set_zero = True
+		self.grid.wall_front = 1 if self.laser_distance.d0 < (self.grid.grid_size - 0.05) else 0
+		self.grid.wall_right = 1 if self.laser_distance.dm90 < (self.grid.grid_size - 0.05) else 0
+		self.grid.wall_back = 1 if self.laser_distance.d180 < (self.grid.grid_size - 0.05) else 0
+		self.grid.wall_left = 1 if self.laser_distance.d90 < (self.grid.grid_size - 0.05) else 0
+		self.grid.update = True
 		
-	def __entry_action_robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall(self):
-		"""Entry action for state 'Keep distance from wall'..
+	def __entry_action_logging_unit_retrieve_current_state(self):
+		"""Entry action for state 'Retrieve current state'..
 		"""
-		self.timer_service.set_timer(self, 0, 1000, False)
-		self.output.speed = -0.1
-		self.output.rotation = -0.3
+		self.__current_cell_x = ((self.grid.column * self.grid.grid_size) + (self.grid.grid_size / 2))
+		self.__current_cell_y = ((self.grid.row * self.grid.grid_size) + (self.grid.grid_size / 2))
+		self.__aligned = ((self.__current_cell_x - self.__current_x)) < 0.03 and ((self.__current_x - self.__current_cell_x)) < 0.03 and ((self.__current_cell_y - self.__current_y)) < 0.03 and ((self.__current_y - self.__current_cell_y)) < 0.03
 		
-	def __entry_action_robot_control_automatic_mode__start_pos_set_zero__move_towards_wall(self):
-		"""Entry action for state 'Move towards wall'..
+	def __entry_action_logging_unit_check_current_walls(self):
+		"""Entry action for state 'check current walls'..
 		"""
-		self.timer_service.set_timer(self, 1, 100, False)
-		self.output.speed = 0.1
-		self.output.rotation = 0.05
+		if self.imu.yaw > 45.0 and self.imu.yaw < 135.0:
+			self.grid.orientation = 0
+		if self.imu.yaw > 135.0 and self.imu.yaw <= 180.0:
+			self.grid.orientation = 3
+		if self.imu.yaw >= -180.0 and self.imu.yaw <= -135.0:
+			self.grid.orientation = 3
+		if self.imu.yaw > -135.0 and self.imu.yaw <= -45.0:
+			self.grid.orientation = 2
+		if self.imu.yaw > -45.0 and self.imu.yaw <= 45.0:
+			self.grid.orientation = 1
+		self.__current_x = ((self.odom.x - ((self.start_pos.zero_x - (self.grid.grid_size / 2)))))
+		self.__current_y = -((self.odom.y - ((self.start_pos.zero_y + (self.grid.grid_size / 2)))))
+		self.grid.column = (int(((self.__current_x / self.grid.grid_size))))
+		self.grid.row = (int(((self.__current_y / self.grid.grid_size))))
+		self.grid.receive = True
 		
-	def __entry_action_robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit(self):
-		"""Entry action for state 'Move forward a bit'..
+	def __entry_action_driving_component_diriving_r1_align(self):
+		"""Entry action for state 'Align'..
 		"""
-		self.timer_service.set_timer(self, 2, 1500, False)
-		self.output.rotation = -0.0
-		self.output.speed = 0.1
+		self.output.rotation = -self.__base_rotation
 		
-	def __entry_action_robot_control_automatic_mode__start_pos_set_zero__realign(self):
+	def __entry_action_driving_component_diriving_r1_rotate_left(self):
+		"""Entry action for state 'Rotate left'..
+		"""
+		self.output.rotation = self.__base_rotation
+		
+	def __entry_action_driving_component_diriving_r1_move_forward(self):
+		"""Entry action for state 'Move forward'..
+		"""
+		self.output.speed = self.__base_speed
+		
+	def __entry_action_logic_component_maze_algorithm_r1_setup(self):
+		"""Entry action for state 'Setup'..
+		"""
+		self.timer_service.set_timer(self, 0, 200, False)
+		if not self.start_pos.set_zero:
+			self.start_pos.set_zero = True
+		
+	def __entry_action_logic_component_maze_algorithm_r1_find_target_alignment(self):
+		"""Entry action for state 'Find target alignment'..
+		"""
+		self.grid.receive = True
+		self.__target_orientation = (((self.grid.orientation - 1)) % 4) if self.grid.wall_left == 0 else (self.grid.orientation if self.grid.wall_front == 0 else ((((self.grid.orientation + 1)) % 4) if self.grid.wall_right == 0 else (((self.grid.orientation - 2)) % 4)))
+		
+	def __entry_action_logic_component_maze_algorithm_r1_realign(self):
 		"""Entry action for state 'Realign'..
 		"""
-		self.output.speed = 0.0
-		self.output.rotation = 0.3
+		self.raise_align_rotation()
 		
-	def __entry_action_robot_control_automatic_mode__start_pos_set_zero__drive_forward(self):
-		"""Entry action for state 'Drive forward'..
+	def __entry_action_logic_component_maze_algorithm_r1_move_forward(self):
+		"""Entry action for state 'Move forward'..
 		"""
-		self.timer_service.set_timer(self, 3, 100, False)
-		self.output.speed = 0.1
+		if self.__target_orientation == 0:
+			self.__target_x = self.odom.x
+			self.__target_y = (self.odom.y + self.grid.grid_size)
+		if self.__target_orientation == 1:
+			self.__target_x = (self.odom.x + self.grid.grid_size)
+			self.__target_y = self.odom.y
+		if self.__target_orientation == 2:
+			self.__target_x = self.odom.x
+			self.__target_y = (self.odom.y - self.grid.grid_size)
+		if self.__target_orientation == 3:
+			self.__target_x = (self.odom.x - self.grid.grid_size)
+			self.__target_y = self.odom.y
+		self.raise_move_forward()
+		
+	def __entry_action_alignment_alignment_unit(self):
+		"""Entry action for state 'Alignment unit'..
+		"""
+		if self.__target_orientation == 0:
+			self.__target_yaw = 90.0
+		if self.__target_orientation == 1:
+			self.__target_yaw = 0.0
+		if self.__target_orientation == 2:
+			self.__target_yaw = -90.0
+		if self.__target_orientation == 3:
+			self.__target_yaw = 180.0
+		if (self.__target_yaw - self.imu.yaw) > self.__limit_degree_low:
+			self.raise_turn_left()
+		if (self.imu.yaw - self.__target_yaw) > self.__limit_degree_low:
+			self.raise_turn_right()
+		
+	def __exit_action_driving_component_diriving_r1_align(self):
+		"""Exit action for state 'Align'..
+		"""
 		self.output.rotation = 0.0
 		
-	def __entry_action_robot_control_automatic_mode__start_pos_set_zero__realign_right(self):
-		"""Entry action for state 'RealignRight'..
+	def __exit_action_driving_component_diriving_r1_rotate_left(self):
+		"""Exit action for state 'Rotate left'..
+		"""
+		self.output.rotation = 0.0
+		
+	def __exit_action_driving_component_diriving_r1_move_forward(self):
+		"""Exit action for state 'Move forward'..
 		"""
 		self.output.speed = 0.0
-		self.output.rotation = -0.3
 		
-	def __exit_action_robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall(self):
-		"""Exit action for state 'Keep distance from wall'..
+	def __exit_action_logic_component_maze_algorithm_r1_setup(self):
+		"""Exit action for state 'Setup'..
 		"""
 		self.timer_service.unset_timer(self, 0)
 		
-	def __exit_action_robot_control_automatic_mode__start_pos_set_zero__move_towards_wall(self):
-		"""Exit action for state 'Move towards wall'..
-		"""
-		self.timer_service.unset_timer(self, 1)
-		
-	def __exit_action_robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit(self):
-		"""Exit action for state 'Move forward a bit'..
-		"""
-		self.timer_service.unset_timer(self, 2)
-		
-	def __exit_action_robot_control_automatic_mode__start_pos_set_zero__drive_forward(self):
-		"""Exit action for state 'Drive forward'..
-		"""
-		self.timer_service.unset_timer(self, 3)
-		
-	def __enter_sequence_robot_control_awaiting_input_default(self):
+	def __enter_sequence_manual_control_component_awaiting_input_default(self):
 		"""'default' enter sequence for state Awaiting input.
 		"""
-		self.__state_vector[0] = self.State.robot_control_awaiting_input
+		self.__entry_action_manual_control_component_awaiting_input()
+		self.__state_vector[0] = self.State.manual_control_component_awaiting_input
+		self.__state_conf_vector_position = 0
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode_default(self):
+	def __enter_sequence_manual_control_component_automatic_mode_default(self):
 		"""'default' enter sequence for state Automatic mode.
 		"""
-		self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__default()
-		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin_default(self):
-		"""'default' enter sequence for state Find origin.
-		"""
-		self.__entry_action_robot_control_automatic_mode__start_pos_set_zero__find_origin()
-		self.__state_vector[0] = self.State.robot_control_automatic_mode_start_pos_set_zero_find_origin
+		self.__entry_action_manual_control_component_automatic_mode()
+		self.__state_vector[0] = self.State.manual_control_component_automatic_mode
+		self.__state_conf_vector_position = 0
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell_default(self):
-		"""'default' enter sequence for state Rotate towards center of cell.
+	def __enter_sequence_logging_unit_startup_default(self):
+		"""'default' enter sequence for state Startup.
 		"""
-		self.__entry_action_robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell()
-		self.__state_vector[0] = self.State.robot_control_automatic_mode_start_pos_set_zero_rotate_towards_center_of_cell
+		self.__entry_action_logging_unit_startup()
+		self.__state_vector[1] = self.State.logging_unit_startup
+		self.__state_conf_vector_position = 1
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell_default(self):
-		"""'default' enter sequence for state Move towards center of cell.
+	def __enter_sequence_logging_unit_manual_default(self):
+		"""'default' enter sequence for state Manual.
 		"""
-		self.__entry_action_robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell()
-		self.__state_vector[0] = self.State.robot_control_automatic_mode_start_pos_set_zero_move_towards_center_of_cell
+		self.__state_vector[1] = self.State.logging_unit_manual
+		self.__state_conf_vector_position = 1
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__done__default(self):
-		"""'default' enter sequence for state Done?.
+	def __enter_sequence_logging_unit_retrieve_current_state_default(self):
+		"""'default' enter sequence for state Retrieve current state.
 		"""
-		self.__entry_action_robot_control_automatic_mode__start_pos_set_zero__done_()
-		self.__state_vector[0] = self.State.robot_control_automatic_mode_start_pos_set_zero_done_
+		self.__entry_action_logging_unit_retrieve_current_state()
+		self.__state_vector[1] = self.State.logging_unit_retrieve_current_state
+		self.__state_conf_vector_position = 1
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall_default(self):
-		"""'default' enter sequence for state Keep distance from wall.
+	def __enter_sequence_logging_unit_check_current_walls_default(self):
+		"""'default' enter sequence for state check current walls.
 		"""
-		self.__entry_action_robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall()
-		self.__state_vector[0] = self.State.robot_control_automatic_mode_start_pos_set_zero_keep_distance_from_wall
+		self.__entry_action_logging_unit_check_current_walls()
+		self.__state_vector[1] = self.State.logging_unit_check_current_walls
+		self.__state_conf_vector_position = 1
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_wall_default(self):
-		"""'default' enter sequence for state Move towards wall.
+	def __enter_sequence_driving_component_diriving_default(self):
+		"""'default' enter sequence for state Diriving.
 		"""
-		self.__entry_action_robot_control_automatic_mode__start_pos_set_zero__move_towards_wall()
-		self.__state_vector[0] = self.State.robot_control_automatic_mode_start_pos_set_zero_move_towards_wall
+		self.__enter_sequence_driving_component_diriving_r1_default()
+		
+	def __enter_sequence_driving_component_diriving_r1_align_default(self):
+		"""'default' enter sequence for state Align.
+		"""
+		self.__entry_action_driving_component_diriving_r1_align()
+		self.__state_vector[2] = self.State.driving_component_diriving_r1align
+		self.__state_conf_vector_position = 2
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit_default(self):
-		"""'default' enter sequence for state Move forward a bit.
+	def __enter_sequence_driving_component_diriving_r1_iteration_default(self):
+		"""'default' enter sequence for state Iteration.
 		"""
-		self.__entry_action_robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit()
-		self.__state_vector[0] = self.State.robot_control_automatic_mode_start_pos_set_zero_move_forward_a_bit
+		self.__state_vector[2] = self.State.driving_component_diriving_r1iteration
+		self.__state_conf_vector_position = 2
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__realign_default(self):
+	def __enter_sequence_driving_component_diriving_r1_rotate_left_default(self):
+		"""'default' enter sequence for state Rotate left.
+		"""
+		self.__entry_action_driving_component_diriving_r1_rotate_left()
+		self.__state_vector[2] = self.State.driving_component_diriving_r1rotate_left
+		self.__state_conf_vector_position = 2
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_driving_component_diriving_r1_move_forward_default(self):
+		"""'default' enter sequence for state Move forward.
+		"""
+		self.__entry_action_driving_component_diriving_r1_move_forward()
+		self.__state_vector[2] = self.State.driving_component_diriving_r1move_forward
+		self.__state_conf_vector_position = 2
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_driving_component_manual_default(self):
+		"""'default' enter sequence for state Manual.
+		"""
+		self.__state_vector[2] = self.State.driving_component_manual
+		self.__state_conf_vector_position = 2
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logic_component_manual_default(self):
+		"""'default' enter sequence for state Manual.
+		"""
+		self.__state_vector[3] = self.State.logic_component_manual
+		self.__state_conf_vector_position = 3
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logic_component_maze_algorithm_default(self):
+		"""'default' enter sequence for state Maze algorithm.
+		"""
+		self.__enter_sequence_logic_component_maze_algorithm_r1_default()
+		
+	def __enter_sequence_logic_component_maze_algorithm_r1_setup_default(self):
+		"""'default' enter sequence for state Setup.
+		"""
+		self.__entry_action_logic_component_maze_algorithm_r1_setup()
+		self.__state_vector[3] = self.State.logic_component_maze_algorithm_r1setup
+		self.__state_conf_vector_position = 3
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logic_component_maze_algorithm_r1_find_target_alignment_default(self):
+		"""'default' enter sequence for state Find target alignment.
+		"""
+		self.__entry_action_logic_component_maze_algorithm_r1_find_target_alignment()
+		self.__state_vector[3] = self.State.logic_component_maze_algorithm_r1find_target_alignment
+		self.__state_conf_vector_position = 3
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logic_component_maze_algorithm_r1_realign_default(self):
 		"""'default' enter sequence for state Realign.
 		"""
-		self.__entry_action_robot_control_automatic_mode__start_pos_set_zero__realign()
-		self.__state_vector[0] = self.State.robot_control_automatic_mode_start_pos_set_zero_realign
+		self.__entry_action_logic_component_maze_algorithm_r1_realign()
+		self.__state_vector[3] = self.State.logic_component_maze_algorithm_r1realign
+		self.__state_conf_vector_position = 3
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__drive_forward_default(self):
-		"""'default' enter sequence for state Drive forward.
+	def __enter_sequence_logic_component_maze_algorithm_r1_move_forward_default(self):
+		"""'default' enter sequence for state Move forward.
 		"""
-		self.__entry_action_robot_control_automatic_mode__start_pos_set_zero__drive_forward()
-		self.__state_vector[0] = self.State.robot_control_automatic_mode_start_pos_set_zero_drive_forward
+		self.__entry_action_logic_component_maze_algorithm_r1_move_forward()
+		self.__state_vector[3] = self.State.logic_component_maze_algorithm_r1move_forward
+		self.__state_conf_vector_position = 3
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__realign_right_default(self):
-		"""'default' enter sequence for state RealignRight.
+	def __enter_sequence_alignment_alignment_unit_default(self):
+		"""'default' enter sequence for state Alignment unit.
 		"""
-		self.__entry_action_robot_control_automatic_mode__start_pos_set_zero__realign_right()
-		self.__state_vector[0] = self.State.robot_control_automatic_mode_start_pos_set_zero_realign_right
+		self.__entry_action_alignment_alignment_unit()
+		self.__state_vector[4] = self.State.alignment_alignment_unit
+		self.__state_conf_vector_position = 4
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_default(self):
-		"""'default' enter sequence for region Robot control.
+	def __enter_sequence_alignment_alignment_off_default(self):
+		"""'default' enter sequence for state Alignment off.
 		"""
-		self.__react_robot_control__entry_default()
+		self.__state_vector[4] = self.State.alignment_alignment_off
+		self.__state_conf_vector_position = 4
+		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_robot_control_automatic_mode__start_pos_set_zero__default(self):
-		"""'default' enter sequence for region [startPos.setZero].
+	def __enter_sequence_manual_control_component_default(self):
+		"""'default' enter sequence for region Manual Control Component.
 		"""
-		self.__react_robot_control_automatic_mode__start_pos_set_zero___entry_default()
+		self.__react_manual_control_component__entry_default()
 		
-	def __exit_sequence_robot_control_awaiting_input(self):
+	def __enter_sequence_logging_unit_default(self):
+		"""'default' enter sequence for region Logging unit.
+		"""
+		self.__react_logging_unit__entry_default()
+		
+	def __enter_sequence_driving_component_default(self):
+		"""'default' enter sequence for region Driving Component.
+		"""
+		self.__react_driving_component__entry_default()
+		
+	def __enter_sequence_driving_component_diriving_r1_default(self):
+		"""'default' enter sequence for region r1.
+		"""
+		self.__react_driving_component_diriving_r1__entry_default()
+		
+	def __enter_sequence_logic_component_default(self):
+		"""'default' enter sequence for region Logic Component.
+		"""
+		self.__react_logic_component__entry_default()
+		
+	def __enter_sequence_logic_component_maze_algorithm_r1_default(self):
+		"""'default' enter sequence for region r1.
+		"""
+		self.__react_logic_component_maze_algorithm_r1__entry_default()
+		
+	def __enter_sequence_alignment_default(self):
+		"""'default' enter sequence for region Alignment.
+		"""
+		self.__react_alignment__entry_default()
+		
+	def __exit_sequence_manual_control_component_awaiting_input(self):
 		"""Default exit sequence for state Awaiting input.
 		"""
 		self.__state_vector[0] = self.State.null_state
+		self.__state_conf_vector_position = 0
 		
-	def __exit_sequence_robot_control_automatic_mode(self):
+	def __exit_sequence_manual_control_component_automatic_mode(self):
 		"""Default exit sequence for state Automatic mode.
 		"""
-		self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero_()
-		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin(self):
-		"""Default exit sequence for state Find origin.
-		"""
 		self.__state_vector[0] = self.State.null_state
+		self.__state_conf_vector_position = 0
 		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell(self):
-		"""Default exit sequence for state Rotate towards center of cell.
+	def __exit_sequence_logging_unit_startup(self):
+		"""Default exit sequence for state Startup.
 		"""
-		self.__state_vector[0] = self.State.null_state
+		self.__state_vector[1] = self.State.null_state
+		self.__state_conf_vector_position = 1
 		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell(self):
-		"""Default exit sequence for state Move towards center of cell.
+	def __exit_sequence_logging_unit_manual(self):
+		"""Default exit sequence for state Manual.
 		"""
-		self.__state_vector[0] = self.State.null_state
+		self.__state_vector[1] = self.State.null_state
+		self.__state_conf_vector_position = 1
 		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero__done_(self):
-		"""Default exit sequence for state Done?.
+	def __exit_sequence_logging_unit_retrieve_current_state(self):
+		"""Default exit sequence for state Retrieve current state.
 		"""
-		self.__state_vector[0] = self.State.null_state
+		self.__state_vector[1] = self.State.null_state
+		self.__state_conf_vector_position = 1
 		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall(self):
-		"""Default exit sequence for state Keep distance from wall.
+	def __exit_sequence_logging_unit_check_current_walls(self):
+		"""Default exit sequence for state check current walls.
 		"""
-		self.__state_vector[0] = self.State.null_state
-		self.__exit_action_robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall()
+		self.__state_vector[1] = self.State.null_state
+		self.__state_conf_vector_position = 1
 		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_wall(self):
-		"""Default exit sequence for state Move towards wall.
+	def __exit_sequence_driving_component_diriving(self):
+		"""Default exit sequence for state Diriving.
 		"""
-		self.__state_vector[0] = self.State.null_state
-		self.__exit_action_robot_control_automatic_mode__start_pos_set_zero__move_towards_wall()
+		self.__exit_sequence_driving_component_diriving_r1()
 		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit(self):
-		"""Default exit sequence for state Move forward a bit.
+	def __exit_sequence_driving_component_diriving_r1_align(self):
+		"""Default exit sequence for state Align.
 		"""
-		self.__state_vector[0] = self.State.null_state
-		self.__exit_action_robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit()
+		self.__state_vector[2] = self.State.null_state
+		self.__state_conf_vector_position = 2
+		self.__exit_action_driving_component_diriving_r1_align()
 		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero__realign(self):
+	def __exit_sequence_driving_component_diriving_r1_iteration(self):
+		"""Default exit sequence for state Iteration.
+		"""
+		self.__state_vector[2] = self.State.null_state
+		self.__state_conf_vector_position = 2
+		
+	def __exit_sequence_driving_component_diriving_r1_rotate_left(self):
+		"""Default exit sequence for state Rotate left.
+		"""
+		self.__state_vector[2] = self.State.null_state
+		self.__state_conf_vector_position = 2
+		self.__exit_action_driving_component_diriving_r1_rotate_left()
+		
+	def __exit_sequence_driving_component_diriving_r1_move_forward(self):
+		"""Default exit sequence for state Move forward.
+		"""
+		self.__state_vector[2] = self.State.null_state
+		self.__state_conf_vector_position = 2
+		self.__exit_action_driving_component_diriving_r1_move_forward()
+		
+	def __exit_sequence_driving_component_manual(self):
+		"""Default exit sequence for state Manual.
+		"""
+		self.__state_vector[2] = self.State.null_state
+		self.__state_conf_vector_position = 2
+		
+	def __exit_sequence_logic_component_manual(self):
+		"""Default exit sequence for state Manual.
+		"""
+		self.__state_vector[3] = self.State.null_state
+		self.__state_conf_vector_position = 3
+		
+	def __exit_sequence_logic_component_maze_algorithm(self):
+		"""Default exit sequence for state Maze algorithm.
+		"""
+		self.__exit_sequence_logic_component_maze_algorithm_r1()
+		
+	def __exit_sequence_logic_component_maze_algorithm_r1_setup(self):
+		"""Default exit sequence for state Setup.
+		"""
+		self.__state_vector[3] = self.State.null_state
+		self.__state_conf_vector_position = 3
+		self.__exit_action_logic_component_maze_algorithm_r1_setup()
+		
+	def __exit_sequence_logic_component_maze_algorithm_r1_find_target_alignment(self):
+		"""Default exit sequence for state Find target alignment.
+		"""
+		self.__state_vector[3] = self.State.null_state
+		self.__state_conf_vector_position = 3
+		
+	def __exit_sequence_logic_component_maze_algorithm_r1_realign(self):
 		"""Default exit sequence for state Realign.
 		"""
-		self.__state_vector[0] = self.State.null_state
+		self.__state_vector[3] = self.State.null_state
+		self.__state_conf_vector_position = 3
 		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero__drive_forward(self):
-		"""Default exit sequence for state Drive forward.
+	def __exit_sequence_logic_component_maze_algorithm_r1_move_forward(self):
+		"""Default exit sequence for state Move forward.
 		"""
-		self.__state_vector[0] = self.State.null_state
-		self.__exit_action_robot_control_automatic_mode__start_pos_set_zero__drive_forward()
+		self.__state_vector[3] = self.State.null_state
+		self.__state_conf_vector_position = 3
 		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero__realign_right(self):
-		"""Default exit sequence for state RealignRight.
+	def __exit_sequence_alignment_alignment_unit(self):
+		"""Default exit sequence for state Alignment unit.
 		"""
-		self.__state_vector[0] = self.State.null_state
+		self.__state_vector[4] = self.State.null_state
+		self.__state_conf_vector_position = 4
 		
-	def __exit_sequence_robot_control(self):
-		"""Default exit sequence for region Robot control.
+	def __exit_sequence_alignment_alignment_off(self):
+		"""Default exit sequence for state Alignment off.
 		"""
-		state = self.__state_vector[0]
-		if state == self.State.robot_control_awaiting_input:
-			self.__exit_sequence_robot_control_awaiting_input()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_find_origin:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_rotate_towards_center_of_cell:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_move_towards_center_of_cell:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_done_:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__done_()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_keep_distance_from_wall:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_move_towards_wall:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_wall()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_move_forward_a_bit:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_realign:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__realign()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_drive_forward:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__drive_forward()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_realign_right:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__realign_right()
+		self.__state_vector[4] = self.State.null_state
+		self.__state_conf_vector_position = 4
 		
-	def __exit_sequence_robot_control_automatic_mode__start_pos_set_zero_(self):
-		"""Default exit sequence for region [startPos.setZero].
+	def __exit_sequence_manual_control_component(self):
+		"""Default exit sequence for region Manual Control Component.
 		"""
 		state = self.__state_vector[0]
-		if state == self.State.robot_control_automatic_mode_start_pos_set_zero_find_origin:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_rotate_towards_center_of_cell:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_move_towards_center_of_cell:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_done_:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__done_()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_keep_distance_from_wall:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_move_towards_wall:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_wall()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_move_forward_a_bit:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_realign:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__realign()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_drive_forward:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__drive_forward()
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_realign_right:
-			self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__realign_right()
+		if state == self.State.manual_control_component_awaiting_input:
+			self.__exit_sequence_manual_control_component_awaiting_input()
+		elif state == self.State.manual_control_component_automatic_mode:
+			self.__exit_sequence_manual_control_component_automatic_mode()
 		
-	def __react_robot_control__entry_default(self):
+	def __exit_sequence_logging_unit(self):
+		"""Default exit sequence for region Logging unit.
+		"""
+		state = self.__state_vector[1]
+		if state == self.State.logging_unit_startup:
+			self.__exit_sequence_logging_unit_startup()
+		elif state == self.State.logging_unit_manual:
+			self.__exit_sequence_logging_unit_manual()
+		elif state == self.State.logging_unit_retrieve_current_state:
+			self.__exit_sequence_logging_unit_retrieve_current_state()
+		elif state == self.State.logging_unit_check_current_walls:
+			self.__exit_sequence_logging_unit_check_current_walls()
+		
+	def __exit_sequence_driving_component(self):
+		"""Default exit sequence for region Driving Component.
+		"""
+		state = self.__state_vector[2]
+		if state == self.State.driving_component_diriving_r1align:
+			self.__exit_sequence_driving_component_diriving_r1_align()
+		elif state == self.State.driving_component_diriving_r1iteration:
+			self.__exit_sequence_driving_component_diriving_r1_iteration()
+		elif state == self.State.driving_component_diriving_r1rotate_left:
+			self.__exit_sequence_driving_component_diriving_r1_rotate_left()
+		elif state == self.State.driving_component_diriving_r1move_forward:
+			self.__exit_sequence_driving_component_diriving_r1_move_forward()
+		elif state == self.State.driving_component_manual:
+			self.__exit_sequence_driving_component_manual()
+		
+	def __exit_sequence_driving_component_diriving_r1(self):
+		"""Default exit sequence for region r1.
+		"""
+		state = self.__state_vector[2]
+		if state == self.State.driving_component_diriving_r1align:
+			self.__exit_sequence_driving_component_diriving_r1_align()
+		elif state == self.State.driving_component_diriving_r1iteration:
+			self.__exit_sequence_driving_component_diriving_r1_iteration()
+		elif state == self.State.driving_component_diriving_r1rotate_left:
+			self.__exit_sequence_driving_component_diriving_r1_rotate_left()
+		elif state == self.State.driving_component_diriving_r1move_forward:
+			self.__exit_sequence_driving_component_diriving_r1_move_forward()
+		
+	def __exit_sequence_logic_component(self):
+		"""Default exit sequence for region Logic Component.
+		"""
+		state = self.__state_vector[3]
+		if state == self.State.logic_component_manual:
+			self.__exit_sequence_logic_component_manual()
+		elif state == self.State.logic_component_maze_algorithm_r1setup:
+			self.__exit_sequence_logic_component_maze_algorithm_r1_setup()
+		elif state == self.State.logic_component_maze_algorithm_r1find_target_alignment:
+			self.__exit_sequence_logic_component_maze_algorithm_r1_find_target_alignment()
+		elif state == self.State.logic_component_maze_algorithm_r1realign:
+			self.__exit_sequence_logic_component_maze_algorithm_r1_realign()
+		elif state == self.State.logic_component_maze_algorithm_r1move_forward:
+			self.__exit_sequence_logic_component_maze_algorithm_r1_move_forward()
+		
+	def __exit_sequence_logic_component_maze_algorithm_r1(self):
+		"""Default exit sequence for region r1.
+		"""
+		state = self.__state_vector[3]
+		if state == self.State.logic_component_maze_algorithm_r1setup:
+			self.__exit_sequence_logic_component_maze_algorithm_r1_setup()
+		elif state == self.State.logic_component_maze_algorithm_r1find_target_alignment:
+			self.__exit_sequence_logic_component_maze_algorithm_r1_find_target_alignment()
+		elif state == self.State.logic_component_maze_algorithm_r1realign:
+			self.__exit_sequence_logic_component_maze_algorithm_r1_realign()
+		elif state == self.State.logic_component_maze_algorithm_r1move_forward:
+			self.__exit_sequence_logic_component_maze_algorithm_r1_move_forward()
+		
+	def __exit_sequence_alignment(self):
+		"""Default exit sequence for region Alignment.
+		"""
+		state = self.__state_vector[4]
+		if state == self.State.alignment_alignment_unit:
+			self.__exit_sequence_alignment_alignment_unit()
+		elif state == self.State.alignment_alignment_off:
+			self.__exit_sequence_alignment_alignment_off()
+		
+	def __react_manual_control_component__entry_default(self):
 		"""Default react sequence for initial entry .
 		"""
-		self.__enter_sequence_robot_control_awaiting_input_default()
+		self.__enter_sequence_manual_control_component_awaiting_input_default()
 		
-	def __react_robot_control_automatic_mode__start_pos_set_zero___entry_default(self):
+	def __react_logging_unit__entry_default(self):
 		"""Default react sequence for initial entry .
 		"""
-		self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin_default()
+		self.__enter_sequence_logging_unit_manual_default()
+		
+	def __react_driving_component_diriving_r1__entry_default(self):
+		"""Default react sequence for initial entry .
+		"""
+		self.__enter_sequence_driving_component_diriving_r1_iteration_default()
+		
+	def __react_driving_component__entry_default(self):
+		"""Default react sequence for initial entry .
+		"""
+		self.__enter_sequence_driving_component_manual_default()
+		
+	def __react_logic_component__entry_default(self):
+		"""Default react sequence for initial entry .
+		"""
+		self.__enter_sequence_logic_component_manual_default()
+		
+	def __react_logic_component_maze_algorithm_r1__entry_default(self):
+		"""Default react sequence for initial entry .
+		"""
+		self.__enter_sequence_logic_component_maze_algorithm_r1_setup_default()
+		
+	def __react_alignment__entry_default(self):
+		"""Default react sequence for initial entry .
+		"""
+		self.__enter_sequence_alignment_alignment_off_default()
 		
 	def __react(self, transitioned_before):
 		"""Implementation of __react function.
 		"""
+		if self.__time_events[1]:
+			self.raise_tick()
 		return transitioned_before
 	
 	
-	def __robot_control_awaiting_input_react(self, transitioned_before):
-		"""Implementation of __robot_control_awaiting_input_react function.
+	def __manual_control_component_awaiting_input_react(self, transitioned_before):
+		"""Implementation of __manual_control_component_awaiting_input_react function.
 		"""
 		transitioned_after = transitioned_before
 		if transitioned_after < 0:
-			if self.computer.m_press:
-				self.__exit_sequence_robot_control_awaiting_input()
-				self.__enter_sequence_robot_control_automatic_mode_default()
-				self.__react(0)
+			if (self.computer.m_press) and (self.output.rotation == 0.0 and self.output.speed == 0.0):
+				self.__exit_sequence_manual_control_component_awaiting_input()
+				self.__enter_sequence_manual_control_component_automatic_mode_default()
 				transitioned_after = 0
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
 			if self.computer.w_press:
-				self.output.speed = self.output.speed + 0.1
+				self.output.speed = self.output.speed + 0.05
 			if self.computer.x_press:
-				self.output.speed = self.output.speed - 0.1
+				self.output.speed = self.output.speed - 0.05
 			if self.computer.s_press:
 				self.output.speed = 0.0
+				self.output.rotation = 0.0
 			if self.computer.a_press:
-				self.output.rotation = self.output.rotation + 0.1
+				self.output.rotation = self.output.rotation + 0.05
 			if self.computer.d_press:
-				self.output.rotation = self.output.rotation - 0.1
-			transitioned_after = self.__react(transitioned_before)
+				self.output.rotation = self.output.rotation - 0.05
 		return transitioned_after
 	
 	
-	def __robot_control_automatic_mode_react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode_react function.
+	def __manual_control_component_automatic_mode_react(self, transitioned_before):
+		"""Implementation of __manual_control_component_automatic_mode_react function.
 		"""
 		transitioned_after = transitioned_before
 		if transitioned_after < 0:
 			if self.computer.m_press:
-				self.__exit_sequence_robot_control_automatic_mode()
-				self.__enter_sequence_robot_control_awaiting_input_default()
-				self.__react(0)
+				self.__exit_sequence_manual_control_component_automatic_mode()
+				self.__enter_sequence_manual_control_component_awaiting_input_default()
 				transitioned_after = 0
+		return transitioned_after
+	
+	
+	def __logging_unit_startup_react(self, transitioned_before):
+		"""Implementation of __logging_unit_startup_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 1:
+			self.__exit_sequence_logging_unit_startup()
+			self.__enter_sequence_logging_unit_check_current_walls_default()
+			transitioned_after = 1
+		return transitioned_after
+	
+	
+	def __logging_unit_manual_react(self, transitioned_before):
+		"""Implementation of __logging_unit_manual_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 1:
+			if self.automatic_mode:
+				self.__exit_sequence_logging_unit_manual()
+				self.__enter_sequence_logging_unit_check_current_walls_default()
+				transitioned_after = 1
+		return transitioned_after
+	
+	
+	def __logging_unit_retrieve_current_state_react(self, transitioned_before):
+		"""Implementation of __logging_unit_retrieve_current_state_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 1:
+			if self.__aligned:
+				self.__exit_sequence_logging_unit_retrieve_current_state()
+				self.__enter_sequence_logging_unit_startup_default()
+				transitioned_after = 1
+			elif not self.__aligned:
+				self.__exit_sequence_logging_unit_retrieve_current_state()
+				self.__enter_sequence_logging_unit_check_current_walls_default()
+				transitioned_after = 1
+		return transitioned_after
+	
+	
+	def __logging_unit_check_current_walls_react(self, transitioned_before):
+		"""Implementation of __logging_unit_check_current_walls_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 1:
+			if self.grid.wall_front == -1:
+				self.__exit_sequence_logging_unit_check_current_walls()
+				self.__enter_sequence_logging_unit_retrieve_current_state_default()
+				transitioned_after = 1
+			elif self.tick:
+				self.__exit_sequence_logging_unit_check_current_walls()
+				self.__enter_sequence_logging_unit_check_current_walls_default()
+				transitioned_after = 1
+		return transitioned_after
+	
+	
+	def __driving_component_diriving_react(self, transitioned_before):
+		"""Implementation of __driving_component_diriving_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 2:
+			if self.manual_mode:
+				self.__exit_sequence_driving_component_diriving()
+				self.__enter_sequence_driving_component_manual_default()
+				transitioned_after = 2
+		return transitioned_after
+	
+	
+	def __driving_component_diriving_r1_align_react(self, transitioned_before):
+		"""Implementation of __driving_component_diriving_r1_align_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 2:
+			if self.turned:
+				self.__exit_sequence_driving_component_diriving_r1_align()
+				self.__enter_sequence_driving_component_diriving_r1_iteration_default()
+				self.__driving_component_diriving_react(2)
+				transitioned_after = 2
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__driving_component_diriving_react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __driving_component_diriving_r1_iteration_react(self, transitioned_before):
+		"""Implementation of __driving_component_diriving_r1_iteration_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 2:
+			if self.turn_left:
+				self.__exit_sequence_driving_component_diriving_r1_iteration()
+				self.__enter_sequence_driving_component_diriving_r1_rotate_left_default()
+				self.__driving_component_diriving_react(2)
+				transitioned_after = 2
+			elif self.turn_right:
+				self.__exit_sequence_driving_component_diriving_r1_iteration()
+				self.__enter_sequence_driving_component_diriving_r1_align_default()
+				self.__driving_component_diriving_react(2)
+				transitioned_after = 2
+			elif self.move_forward:
+				self.__exit_sequence_driving_component_diriving_r1_iteration()
+				self.__enter_sequence_driving_component_diriving_r1_move_forward_default()
+				self.__driving_component_diriving_react(2)
+				transitioned_after = 2
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__driving_component_diriving_react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __driving_component_diriving_r1_rotate_left_react(self, transitioned_before):
+		"""Implementation of __driving_component_diriving_r1_rotate_left_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 2:
+			if self.turned:
+				self.__exit_sequence_driving_component_diriving_r1_rotate_left()
+				self.__enter_sequence_driving_component_diriving_r1_iteration_default()
+				self.__driving_component_diriving_react(2)
+				transitioned_after = 2
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__driving_component_diriving_react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __driving_component_diriving_r1_move_forward_react(self, transitioned_before):
+		"""Implementation of __driving_component_diriving_r1_move_forward_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 2:
+			if self.moved_forward:
+				self.__exit_sequence_driving_component_diriving_r1_move_forward()
+				self.__enter_sequence_driving_component_diriving_r1_iteration_default()
+				self.__driving_component_diriving_react(2)
+				transitioned_after = 2
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__driving_component_diriving_react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __driving_component_manual_react(self, transitioned_before):
+		"""Implementation of __driving_component_manual_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 2:
+			if self.automatic_mode:
+				self.__exit_sequence_driving_component_manual()
+				self.__enter_sequence_driving_component_diriving_default()
+				transitioned_after = 2
+		return transitioned_after
+	
+	
+	def __logic_component_manual_react(self, transitioned_before):
+		"""Implementation of __logic_component_manual_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 3:
+			if self.automatic_mode:
+				self.__exit_sequence_logic_component_manual()
+				self.__enter_sequence_logic_component_maze_algorithm_default()
+				transitioned_after = 3
+		return transitioned_after
+	
+	
+	def __logic_component_maze_algorithm_react(self, transitioned_before):
+		"""Implementation of __logic_component_maze_algorithm_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 3:
+			if self.manual_mode:
+				self.__exit_sequence_logic_component_maze_algorithm()
+				self.__enter_sequence_logic_component_manual_default()
+				transitioned_after = 3
+		return transitioned_after
+	
+	
+	def __logic_component_maze_algorithm_r1_setup_react(self, transitioned_before):
+		"""Implementation of __logic_component_maze_algorithm_r1_setup_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 3:
+			if self.__time_events[0]:
+				self.__exit_sequence_logic_component_maze_algorithm_r1_setup()
+				self.__enter_sequence_logic_component_maze_algorithm_r1_find_target_alignment_default()
+				self.__logic_component_maze_algorithm_react(3)
+				transitioned_after = 3
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__logic_component_maze_algorithm_react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __logic_component_maze_algorithm_r1_find_target_alignment_react(self, transitioned_before):
+		"""Implementation of __logic_component_maze_algorithm_r1_find_target_alignment_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 3:
+			self.__exit_sequence_logic_component_maze_algorithm_r1_find_target_alignment()
+			self.__enter_sequence_logic_component_maze_algorithm_r1_realign_default()
+			self.__logic_component_maze_algorithm_react(3)
+			transitioned_after = 3
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__logic_component_maze_algorithm_react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __logic_component_maze_algorithm_r1_realign_react(self, transitioned_before):
+		"""Implementation of __logic_component_maze_algorithm_r1_realign_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 3:
+			if self.rotation_aligned:
+				self.__exit_sequence_logic_component_maze_algorithm_r1_realign()
+				self.__enter_sequence_logic_component_maze_algorithm_r1_move_forward_default()
+				self.__logic_component_maze_algorithm_react(3)
+				transitioned_after = 3
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__logic_component_maze_algorithm_react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __logic_component_maze_algorithm_r1_move_forward_react(self, transitioned_before):
+		"""Implementation of __logic_component_maze_algorithm_r1_move_forward_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 3:
+			if (self.__target_x - self.odom.x) < 0.03 and (self.odom.x - self.__target_x) < 0.03 and (self.__target_y - self.odom.y) < 0.03 and (self.odom.y - self.__target_y) < 0.03:
+				self.__exit_sequence_logic_component_maze_algorithm_r1_move_forward()
+				self.raise_moved_forward()
+				self.__enter_sequence_logic_component_maze_algorithm_r1_find_target_alignment_default()
+				self.__logic_component_maze_algorithm_react(3)
+				transitioned_after = 3
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__logic_component_maze_algorithm_react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __alignment_alignment_unit_react(self, transitioned_before):
+		"""Implementation of __alignment_alignment_unit_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 4:
+			if ((self.imu.yaw - self.__target_yaw)) <= self.__limit_degree_low and (self.__target_yaw - self.imu.yaw) <= self.__limit_degree_low:
+				self.__exit_sequence_alignment_alignment_unit()
+				self.raise_turned()
+				self.raise_rotation_aligned()
+				self.__enter_sequence_alignment_alignment_off_default()
+				self.__react(0)
+				transitioned_after = 4
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
 			transitioned_after = self.__react(transitioned_before)
 		return transitioned_after
 	
 	
-	def __robot_control_automatic_mode__start_pos_set_zero__find_origin_react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode__start_pos_set_zero__find_origin_react function.
+	def __alignment_alignment_off_react(self, transitioned_before):
+		"""Implementation of __alignment_alignment_off_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 0:
-			if self.imu.yaw > -0.5 and self.imu.yaw < 0.5 and self.laser_distance.d0 < (((0.51 + (0.48 / 2)) + 0.05)):
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-			elif self.imu.yaw > -1.0 and self.imu.yaw < 1.0 and self.laser_distance.d0 > ((0.51) + ((0.48 / 2))) and self.laser_distance.dleft_min > 0.19 and self.laser_distance.dleft_min < 1.0:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__drive_forward_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-			elif self.imu.yaw < -2.0:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__realign_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-			elif self.imu.yaw > 2.0:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__realign_right_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-			elif self.laser_distance.dleft_min < 0.19:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-			elif self.laser_distance.dleft_min > 0.32 and self.laser_distance.dleft_min < 1.0:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_wall_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
+		if transitioned_after < 4:
+			if self.align_rotation:
+				self.__exit_sequence_alignment_alignment_off()
+				self.__enter_sequence_alignment_alignment_unit_default()
+				self.__react(0)
+				transitioned_after = 4
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
-			transitioned_after = self.__robot_control_automatic_mode_react(transitioned_before)
-		return transitioned_after
-	
-	
-	def __robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell_react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 0:
-			if self.imu.yaw < -88.0:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-		#If no transition was taken then execute local reactions
-		if transitioned_after == transitioned_before:
-			transitioned_after = self.__robot_control_automatic_mode_react(transitioned_before)
-		return transitioned_after
-	
-	
-	def __robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell_react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 0:
-			if self.laser_distance.dback_min > 0.2:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__done__default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-		#If no transition was taken then execute local reactions
-		if transitioned_after == transitioned_before:
-			transitioned_after = self.__robot_control_automatic_mode_react(transitioned_before)
-		return transitioned_after
-	
-	
-	def __robot_control_automatic_mode__start_pos_set_zero__done__react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode__start_pos_set_zero__done__react function.
-		"""
-		transitioned_after = transitioned_before
-		#If no transition was taken then execute local reactions
-		if transitioned_after == transitioned_before:
-			transitioned_after = self.__robot_control_automatic_mode_react(transitioned_before)
-		return transitioned_after
-	
-	
-	def __robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall_react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 0:
-			if self.__time_events[0]:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-		#If no transition was taken then execute local reactions
-		if transitioned_after == transitioned_before:
-			transitioned_after = self.__robot_control_automatic_mode_react(transitioned_before)
-		return transitioned_after
-	
-	
-	def __robot_control_automatic_mode__start_pos_set_zero__move_towards_wall_react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode__start_pos_set_zero__move_towards_wall_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 0:
-			if self.__time_events[1]:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_towards_wall()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-		#If no transition was taken then execute local reactions
-		if transitioned_after == transitioned_before:
-			transitioned_after = self.__robot_control_automatic_mode_react(transitioned_before)
-		return transitioned_after
-	
-	
-	def __robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit_react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 0:
-			if self.__time_events[2]:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-		#If no transition was taken then execute local reactions
-		if transitioned_after == transitioned_before:
-			transitioned_after = self.__robot_control_automatic_mode_react(transitioned_before)
-		return transitioned_after
-	
-	
-	def __robot_control_automatic_mode__start_pos_set_zero__realign_react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode__start_pos_set_zero__realign_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 0:
-			if self.imu.yaw > -0.5:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__realign()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-		#If no transition was taken then execute local reactions
-		if transitioned_after == transitioned_before:
-			transitioned_after = self.__robot_control_automatic_mode_react(transitioned_before)
-		return transitioned_after
-	
-	
-	def __robot_control_automatic_mode__start_pos_set_zero__drive_forward_react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode__start_pos_set_zero__drive_forward_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 0:
-			if self.__time_events[3]:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__drive_forward()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-		#If no transition was taken then execute local reactions
-		if transitioned_after == transitioned_before:
-			transitioned_after = self.__robot_control_automatic_mode_react(transitioned_before)
-		return transitioned_after
-	
-	
-	def __robot_control_automatic_mode__start_pos_set_zero__realign_right_react(self, transitioned_before):
-		"""Implementation of __robot_control_automatic_mode__start_pos_set_zero__realign_right_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 0:
-			if self.imu.yaw < 0.5:
-				self.__exit_sequence_robot_control_automatic_mode__start_pos_set_zero__realign_right()
-				self.__enter_sequence_robot_control_automatic_mode__start_pos_set_zero__find_origin_default()
-				self.__robot_control_automatic_mode_react(0)
-				transitioned_after = 0
-		#If no transition was taken then execute local reactions
-		if transitioned_after == transitioned_before:
-			transitioned_after = self.__robot_control_automatic_mode_react(transitioned_before)
+			transitioned_after = self.__react(transitioned_before)
 		return transitioned_after
 	
 	
@@ -1016,36 +1505,74 @@ class Model:
 		self.computer.x_press = False
 		self.__time_events[0] = False
 		self.__time_events[1] = False
-		self.__time_events[2] = False
-		self.__time_events[3] = False
+	
+	
+	def __clear_internal_events(self):
+		"""Implementation of __clear_internal_events function.
+		"""
+		self.tick = False
+		self.automatic_mode = False
+		self.manual_mode = False
+		self.align_rotation = False
+		self.turn_left = False
+		self.turn_right = False
+		self.move_forward = False
+		self.turned = False
+		self.rotation_aligned = False
+		self.moved_forward = False
+		self.logged = False
 	
 	
 	def __micro_step(self):
 		"""Implementation of __micro_step function.
 		"""
+		transitioned = -1
+		self.__state_conf_vector_position = 0
 		state = self.__state_vector[0]
-		if state == self.State.robot_control_awaiting_input:
-			self.__robot_control_awaiting_input_react(-1)
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_find_origin:
-			self.__robot_control_automatic_mode__start_pos_set_zero__find_origin_react(-1)
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_rotate_towards_center_of_cell:
-			self.__robot_control_automatic_mode__start_pos_set_zero__rotate_towards_center_of_cell_react(-1)
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_move_towards_center_of_cell:
-			self.__robot_control_automatic_mode__start_pos_set_zero__move_towards_center_of_cell_react(-1)
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_done_:
-			self.__robot_control_automatic_mode__start_pos_set_zero__done__react(-1)
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_keep_distance_from_wall:
-			self.__robot_control_automatic_mode__start_pos_set_zero__keep_distance_from_wall_react(-1)
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_move_towards_wall:
-			self.__robot_control_automatic_mode__start_pos_set_zero__move_towards_wall_react(-1)
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_move_forward_a_bit:
-			self.__robot_control_automatic_mode__start_pos_set_zero__move_forward_a_bit_react(-1)
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_realign:
-			self.__robot_control_automatic_mode__start_pos_set_zero__realign_react(-1)
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_drive_forward:
-			self.__robot_control_automatic_mode__start_pos_set_zero__drive_forward_react(-1)
-		elif state == self.State.robot_control_automatic_mode_start_pos_set_zero_realign_right:
-			self.__robot_control_automatic_mode__start_pos_set_zero__realign_right_react(-1)
+		if state == self.State.manual_control_component_awaiting_input:
+			transitioned = self.__manual_control_component_awaiting_input_react(transitioned)
+		elif state == self.State.manual_control_component_automatic_mode:
+			transitioned = self.__manual_control_component_automatic_mode_react(transitioned)
+		if self.__state_conf_vector_position < 1:
+			state = self.__state_vector[1]
+			if state == self.State.logging_unit_startup:
+				transitioned = self.__logging_unit_startup_react(transitioned)
+			elif state == self.State.logging_unit_manual:
+				transitioned = self.__logging_unit_manual_react(transitioned)
+			elif state == self.State.logging_unit_retrieve_current_state:
+				transitioned = self.__logging_unit_retrieve_current_state_react(transitioned)
+			elif state == self.State.logging_unit_check_current_walls:
+				transitioned = self.__logging_unit_check_current_walls_react(transitioned)
+		if self.__state_conf_vector_position < 2:
+			state = self.__state_vector[2]
+			if state == self.State.driving_component_diriving_r1align:
+				transitioned = self.__driving_component_diriving_r1_align_react(transitioned)
+			elif state == self.State.driving_component_diriving_r1iteration:
+				transitioned = self.__driving_component_diriving_r1_iteration_react(transitioned)
+			elif state == self.State.driving_component_diriving_r1rotate_left:
+				transitioned = self.__driving_component_diriving_r1_rotate_left_react(transitioned)
+			elif state == self.State.driving_component_diriving_r1move_forward:
+				transitioned = self.__driving_component_diriving_r1_move_forward_react(transitioned)
+			elif state == self.State.driving_component_manual:
+				transitioned = self.__driving_component_manual_react(transitioned)
+		if self.__state_conf_vector_position < 3:
+			state = self.__state_vector[3]
+			if state == self.State.logic_component_manual:
+				transitioned = self.__logic_component_manual_react(transitioned)
+			elif state == self.State.logic_component_maze_algorithm_r1setup:
+				transitioned = self.__logic_component_maze_algorithm_r1_setup_react(transitioned)
+			elif state == self.State.logic_component_maze_algorithm_r1find_target_alignment:
+				transitioned = self.__logic_component_maze_algorithm_r1_find_target_alignment_react(transitioned)
+			elif state == self.State.logic_component_maze_algorithm_r1realign:
+				transitioned = self.__logic_component_maze_algorithm_r1_realign_react(transitioned)
+			elif state == self.State.logic_component_maze_algorithm_r1move_forward:
+				transitioned = self.__logic_component_maze_algorithm_r1_move_forward_react(transitioned)
+		if self.__state_conf_vector_position < 4:
+			state = self.__state_vector[4]
+			if state == self.State.alignment_alignment_unit:
+				transitioned = self.__alignment_alignment_unit_react(transitioned)
+			elif state == self.State.alignment_alignment_off:
+				transitioned = self.__alignment_alignment_off_react(transitioned)
 	
 	
 	def run_cycle(self):
@@ -1064,10 +1591,11 @@ class Model:
 		while condition_0:
 			self.__micro_step()
 			self.__clear_in_events()
+			self.__clear_internal_events()
 			next_event = self.__get_next_event()
 			if next_event is not None:
 				self.__execute_queued_event(next_event)
-			condition_0 = self.computer.m_press or self.computer.w_press or self.computer.a_press or self.computer.s_press or self.computer.d_press or self.computer.x_press or self.__time_events[0] or self.__time_events[1] or self.__time_events[2] or self.__time_events[3]
+			condition_0 = self.computer.m_press or self.computer.w_press or self.computer.a_press or self.computer.s_press or self.computer.d_press or self.computer.x_press or self.tick or self.automatic_mode or self.manual_mode or self.align_rotation or self.turn_left or self.turn_right or self.move_forward or self.turned or self.rotation_aligned or self.moved_forward or self.logged or self.__time_events[0] or self.__time_events[1]
 		self.__is_executing = False
 	
 	
@@ -1080,7 +1608,12 @@ class Model:
 		if self.__is_executing:
 			return
 		self.__is_executing = True
-		self.__enter_sequence_robot_control_default()
+		self.timer_service.set_timer(self, 1, 100, True)
+		self.__enter_sequence_manual_control_component_default()
+		self.__enter_sequence_logging_unit_default()
+		self.__enter_sequence_driving_component_default()
+		self.__enter_sequence_logic_component_default()
+		self.__enter_sequence_alignment_default()
 		self.__is_executing = False
 	
 	
@@ -1090,7 +1623,12 @@ class Model:
 		if self.__is_executing:
 			return
 		self.__is_executing = True
-		self.__exit_sequence_robot_control()
+		self.__exit_sequence_manual_control_component()
+		self.__exit_sequence_logging_unit()
+		self.__exit_sequence_driving_component()
+		self.__exit_sequence_logic_component()
+		self.__exit_sequence_alignment()
+		self.timer_service.unset_timer(self, 1)
 		self.__is_executing = False
 	
 	
