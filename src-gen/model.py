@@ -16,10 +16,6 @@ class Model:
 		(
 			manual_control_component_awaiting_input,
 			manual_control_component_automatic_mode,
-			logging_unit_startup,
-			logging_unit_manual,
-			logging_unit_retrieve_current_state,
-			logging_unit_check_current_walls,
 			driving_component_diriving,
 			driving_component_diriving_r1align,
 			driving_component_diriving_r1iteration,
@@ -34,8 +30,15 @@ class Model:
 			logic_component_maze_algorithm_r1move_forward,
 			alignment_alignment_unit,
 			alignment_alignment_off,
+			logging_component_map_left_wall,
+			logging_component_manual,
+			logging_component_update_state,
+			logging_component_map_open_wall,
+			logging_component_wait_until_zero_state_set,
+			logging_component_wait_until_received,
+			logging_component_wait_until_received_2,
 			null_state
-		) = range(21)
+		) = range(24)
 	
 	
 	class BaseValues:
@@ -49,6 +52,24 @@ class Model:
 			self.degrees_right = None
 			self.degrees_back = None
 			self.degrees_left = None
+			self.orientation_north = None
+			self.orientation_east = None
+			self.orientation_south = None
+			self.orientation_west = None
+			self.north_degree = None
+			self.east_degree = None
+			self.south_degree = None
+			self.west_degree = None
+			self.north_orientation_degree_from = None
+			self.east_orientation_degree_from = None
+			self.south_orientation_degree_from = None
+			self.west_orientation_degree_from1 = None
+			self.west_orientation_degree_from2 = None
+			self.north_orientation_degree_to = None
+			self.east_orientation_degree_to = None
+			self.south_orientation_degree_to = None
+			self.west_orientation_degree_to1 = None
+			self.west_orientation_degree_to2 = None
 			
 			self.statemachine = statemachine
 		
@@ -290,6 +311,12 @@ class Model:
 		self.__base_rotation = None
 		self.__limit_degree_low = None
 		self.__limit_degree_high = None
+		self.__tmp_column = None
+		self.__tmp_row = None
+		self.__previous_column = None
+		self.__previous_row = None
+		self.__transitioned = None
+		self.__update_cell_transition = None
 		self.__current_x = None
 		self.__current_y = None
 		self.__current_cell_x = None
@@ -300,6 +327,9 @@ class Model:
 		self.__startprocedure = None
 		self.__target_yaw = None
 		self.__aligned = None
+		self.__align_yaw = None
+		self.__yaw_aligned = None
+		self.__position_aligned = None
 		self.tick = None
 		self.automatic_mode = None
 		self.manual_mode = None
@@ -328,6 +358,12 @@ class Model:
 		self.__base_rotation = 0.2
 		self.__limit_degree_low = 3
 		self.__limit_degree_high = 5
+		self.__tmp_column = 0
+		self.__tmp_row = 0
+		self.__previous_column = 0
+		self.__previous_row = 0
+		self.__transitioned = False
+		self.__update_cell_transition = False
 		self.__current_x = 0.0
 		self.__current_y = 0.0
 		self.__current_cell_x = 0.0
@@ -338,12 +374,33 @@ class Model:
 		self.__startprocedure = True
 		self.__target_yaw = 0.0
 		self.__aligned = False
+		self.__align_yaw = 0.0
+		self.__yaw_aligned = False
+		self.__position_aligned = False
 		self.base_values.max_speed = 0.22
 		self.base_values.max_rotation = 2.84
 		self.base_values.degrees_front = 10
 		self.base_values.degrees_right = 10
 		self.base_values.degrees_back = 10
 		self.base_values.degrees_left = 10
+		self.base_values.orientation_north = 0
+		self.base_values.orientation_east = 1
+		self.base_values.orientation_south = 2
+		self.base_values.orientation_west = 3
+		self.base_values.north_degree = 90
+		self.base_values.east_degree = 0
+		self.base_values.south_degree = -90
+		self.base_values.west_degree = 180
+		self.base_values.north_orientation_degree_from = 45
+		self.base_values.east_orientation_degree_from = -45
+		self.base_values.south_orientation_degree_from = -135
+		self.base_values.west_orientation_degree_from1 = 135
+		self.base_values.west_orientation_degree_from2 = -180
+		self.base_values.north_orientation_degree_to = 135
+		self.base_values.east_orientation_degree_to = 45
+		self.base_values.south_orientation_degree_to = -45
+		self.base_values.west_orientation_degree_to1 = 180
+		self.base_values.west_orientation_degree_to2 = -135
 		self.output.speed = 0.0
 		self.output.rotation = 0.0
 		self.output.obstacles = 0
@@ -440,44 +497,50 @@ class Model:
 			return self.__state_vector[0] == self.__State.manual_control_component_awaiting_input
 		if s == self.__State.manual_control_component_automatic_mode:
 			return self.__state_vector[0] == self.__State.manual_control_component_automatic_mode
-		if s == self.__State.logging_unit_startup:
-			return self.__state_vector[1] == self.__State.logging_unit_startup
-		if s == self.__State.logging_unit_manual:
-			return self.__state_vector[1] == self.__State.logging_unit_manual
-		if s == self.__State.logging_unit_retrieve_current_state:
-			return self.__state_vector[1] == self.__State.logging_unit_retrieve_current_state
-		if s == self.__State.logging_unit_check_current_walls:
-			return self.__state_vector[1] == self.__State.logging_unit_check_current_walls
 		if s == self.__State.driving_component_diriving:
-			return (self.__state_vector[2] >= self.__State.driving_component_diriving)\
-				and (self.__state_vector[2] <= self.__State.driving_component_diriving_r1move_forward)
+			return (self.__state_vector[1] >= self.__State.driving_component_diriving)\
+				and (self.__state_vector[1] <= self.__State.driving_component_diriving_r1move_forward)
 		if s == self.__State.driving_component_diriving_r1align:
-			return self.__state_vector[2] == self.__State.driving_component_diriving_r1align
+			return self.__state_vector[1] == self.__State.driving_component_diriving_r1align
 		if s == self.__State.driving_component_diriving_r1iteration:
-			return self.__state_vector[2] == self.__State.driving_component_diriving_r1iteration
+			return self.__state_vector[1] == self.__State.driving_component_diriving_r1iteration
 		if s == self.__State.driving_component_diriving_r1rotate_left:
-			return self.__state_vector[2] == self.__State.driving_component_diriving_r1rotate_left
+			return self.__state_vector[1] == self.__State.driving_component_diriving_r1rotate_left
 		if s == self.__State.driving_component_diriving_r1move_forward:
-			return self.__state_vector[2] == self.__State.driving_component_diriving_r1move_forward
+			return self.__state_vector[1] == self.__State.driving_component_diriving_r1move_forward
 		if s == self.__State.driving_component_manual:
-			return self.__state_vector[2] == self.__State.driving_component_manual
+			return self.__state_vector[1] == self.__State.driving_component_manual
 		if s == self.__State.logic_component_manual:
-			return self.__state_vector[3] == self.__State.logic_component_manual
+			return self.__state_vector[2] == self.__State.logic_component_manual
 		if s == self.__State.logic_component_maze_algorithm:
-			return (self.__state_vector[3] >= self.__State.logic_component_maze_algorithm)\
-				and (self.__state_vector[3] <= self.__State.logic_component_maze_algorithm_r1move_forward)
+			return (self.__state_vector[2] >= self.__State.logic_component_maze_algorithm)\
+				and (self.__state_vector[2] <= self.__State.logic_component_maze_algorithm_r1move_forward)
 		if s == self.__State.logic_component_maze_algorithm_r1setup:
-			return self.__state_vector[3] == self.__State.logic_component_maze_algorithm_r1setup
+			return self.__state_vector[2] == self.__State.logic_component_maze_algorithm_r1setup
 		if s == self.__State.logic_component_maze_algorithm_r1find_target_alignment:
-			return self.__state_vector[3] == self.__State.logic_component_maze_algorithm_r1find_target_alignment
+			return self.__state_vector[2] == self.__State.logic_component_maze_algorithm_r1find_target_alignment
 		if s == self.__State.logic_component_maze_algorithm_r1realign:
-			return self.__state_vector[3] == self.__State.logic_component_maze_algorithm_r1realign
+			return self.__state_vector[2] == self.__State.logic_component_maze_algorithm_r1realign
 		if s == self.__State.logic_component_maze_algorithm_r1move_forward:
-			return self.__state_vector[3] == self.__State.logic_component_maze_algorithm_r1move_forward
+			return self.__state_vector[2] == self.__State.logic_component_maze_algorithm_r1move_forward
 		if s == self.__State.alignment_alignment_unit:
-			return self.__state_vector[4] == self.__State.alignment_alignment_unit
+			return self.__state_vector[3] == self.__State.alignment_alignment_unit
 		if s == self.__State.alignment_alignment_off:
-			return self.__state_vector[4] == self.__State.alignment_alignment_off
+			return self.__state_vector[3] == self.__State.alignment_alignment_off
+		if s == self.__State.logging_component_map_left_wall:
+			return self.__state_vector[4] == self.__State.logging_component_map_left_wall
+		if s == self.__State.logging_component_manual:
+			return self.__state_vector[4] == self.__State.logging_component_manual
+		if s == self.__State.logging_component_update_state:
+			return self.__state_vector[4] == self.__State.logging_component_update_state
+		if s == self.__State.logging_component_map_open_wall:
+			return self.__state_vector[4] == self.__State.logging_component_map_open_wall
+		if s == self.__State.logging_component_wait_until_zero_state_set:
+			return self.__state_vector[4] == self.__State.logging_component_wait_until_zero_state_set
+		if s == self.__State.logging_component_wait_until_received:
+			return self.__state_vector[4] == self.__State.logging_component_wait_until_received
+		if s == self.__State.logging_component_wait_until_received_2:
+			return self.__state_vector[4] == self.__State.logging_component_wait_until_received_2
 		return False
 		
 	def time_elapsed(self, event_id):
@@ -625,41 +688,6 @@ class Model:
 		"""
 		self.raise_automatic_mode()
 		
-	def __entry_action_logging_unit_startup(self):
-		"""Entry action for state 'Startup'..
-		"""
-		self.grid.wall_front = 1 if self.laser_distance.d0 < (self.grid.grid_size - 0.05) else 0
-		self.grid.wall_right = 1 if self.laser_distance.dm90 < (self.grid.grid_size - 0.05) else 0
-		self.grid.wall_back = 1 if self.laser_distance.d180 < (self.grid.grid_size - 0.05) else 0
-		self.grid.wall_left = 1 if self.laser_distance.d90 < (self.grid.grid_size - 0.05) else 0
-		self.grid.update = True
-		
-	def __entry_action_logging_unit_retrieve_current_state(self):
-		"""Entry action for state 'Retrieve current state'..
-		"""
-		self.__current_cell_x = ((self.grid.column * self.grid.grid_size) + (self.grid.grid_size / 2))
-		self.__current_cell_y = ((self.grid.row * self.grid.grid_size) + (self.grid.grid_size / 2))
-		self.__aligned = ((self.__current_cell_x - self.__current_x)) < 0.03 and ((self.__current_x - self.__current_cell_x)) < 0.03 and ((self.__current_cell_y - self.__current_y)) < 0.03 and ((self.__current_y - self.__current_cell_y)) < 0.03
-		
-	def __entry_action_logging_unit_check_current_walls(self):
-		"""Entry action for state 'check current walls'..
-		"""
-		if self.imu.yaw > 45.0 and self.imu.yaw < 135.0:
-			self.grid.orientation = 0
-		if self.imu.yaw > 135.0 and self.imu.yaw <= 180.0:
-			self.grid.orientation = 3
-		if self.imu.yaw >= -180.0 and self.imu.yaw <= -135.0:
-			self.grid.orientation = 3
-		if self.imu.yaw > -135.0 and self.imu.yaw <= -45.0:
-			self.grid.orientation = 2
-		if self.imu.yaw > -45.0 and self.imu.yaw <= 45.0:
-			self.grid.orientation = 1
-		self.__current_x = ((self.odom.x - ((self.start_pos.zero_x - (self.grid.grid_size / 2)))))
-		self.__current_y = -((self.odom.y - ((self.start_pos.zero_y + (self.grid.grid_size / 2)))))
-		self.grid.column = (int(((self.__current_x / self.grid.grid_size))))
-		self.grid.row = (int(((self.__current_y / self.grid.grid_size))))
-		self.grid.receive = True
-		
 	def __entry_action_driving_component_diriving_r1_align(self):
 		"""Entry action for state 'Align'..
 		"""
@@ -726,6 +754,61 @@ class Model:
 		if (self.imu.yaw - self.__target_yaw) > self.__limit_degree_low:
 			self.raise_turn_right()
 		
+	def __entry_action_logging_component_map_left_wall(self):
+		"""Entry action for state 'Map left wall'..
+		"""
+		self.grid.wall_left = 1 if self.laser_distance.dleft_max < self.grid.grid_size else -1
+		self.grid.update = True
+		
+	def __entry_action_logging_component_update_state(self):
+		"""Entry action for state 'Update state'..
+		"""
+		if self.imu.yaw > self.base_values.north_orientation_degree_from and self.imu.yaw < self.base_values.north_orientation_degree_to:
+			self.grid.orientation = self.base_values.orientation_north
+			self.__align_yaw = self.base_values.north_degree
+		if self.imu.yaw > self.base_values.west_orientation_degree_from1 and self.imu.yaw <= self.base_values.west_orientation_degree_to1:
+			self.grid.orientation = self.base_values.orientation_west
+			self.__align_yaw = self.base_values.west_degree
+		if self.imu.yaw >= self.base_values.west_orientation_degree_from2 and self.imu.yaw <= self.base_values.west_orientation_degree_to2:
+			self.grid.orientation = self.base_values.orientation_west
+			self.__align_yaw = self.base_values.west_degree
+		if self.imu.yaw > self.base_values.south_orientation_degree_from and self.imu.yaw <= self.base_values.south_orientation_degree_to:
+			self.grid.orientation = self.base_values.orientation_south
+			self.__align_yaw = self.base_values.south_degree
+		if self.imu.yaw > self.base_values.east_orientation_degree_from and self.imu.yaw <= self.base_values.east_orientation_degree_to:
+			self.grid.orientation = self.base_values.orientation_east
+			self.__align_yaw = self.base_values.east_degree
+		self.__current_x = ((self.odom.x - ((self.start_pos.zero_x - (self.grid.grid_size / 2)))))
+		self.__current_y = -((self.odom.y - ((self.start_pos.zero_y + (self.grid.grid_size / 2)))))
+		self.__tmp_column = (int(((self.__current_x / self.grid.grid_size))))
+		self.__tmp_row = (int(((self.__current_y / self.grid.grid_size))))
+		self.__transitioned = True if (self.__tmp_column != self.grid.column or self.__tmp_row != self.grid.row) else False
+		self.__previous_column = self.grid.column if not self.__update_cell_transition and self.__transitioned else self.__previous_column
+		self.__previous_row = self.grid.row if not self.__update_cell_transition and self.__transitioned else self.__previous_row
+		self.__update_cell_transition = True if not self.__update_cell_transition and self.__transitioned else self.__update_cell_transition
+		self.grid.column = self.__tmp_column
+		self.grid.row = self.__tmp_row
+		self.__current_cell_x = ((self.grid.column * self.grid.grid_size) + (self.grid.grid_size / 2))
+		self.__current_cell_y = ((self.grid.row * self.grid.grid_size) + (self.grid.grid_size / 2))
+		self.__position_aligned = ((self.__current_cell_x - self.__current_x)) < 0.15 and ((self.__current_x - self.__current_cell_x)) < 0.15 and ((self.__current_cell_y - self.__current_y)) < 0.15 and ((self.__current_y - self.__current_cell_y)) < 0.15
+		self.__yaw_aligned = ((((self.imu.yaw - self.__align_yaw)) % 360) > 0 and (((self.imu.yaw - self.__align_yaw)) % 360) < 20) or ((((self.__align_yaw - self.imu.yaw)) % 360) > 0 and (((self.__align_yaw - self.imu.yaw)) % 360) < 20)
+		self.grid.receive = True
+		
+	def __entry_action_logging_component_map_open_wall(self):
+		"""Entry action for state 'Map Open Wall'..
+		"""
+		if self.grid.column > self.__previous_column:
+			self.grid.orientation = 1
+		if self.grid.column < self.__previous_column:
+			self.grid.orientation = 3
+		if self.grid.row > self.__previous_row:
+			self.grid.orientation = 2
+		if self.grid.row < self.__previous_row:
+			self.grid.orientation = 0
+		self.grid.wall_back = 0
+		self.__update_cell_transition = False
+		self.grid.update = True
+		
 	def __exit_action_driving_component_diriving_r1_align(self):
 		"""Exit action for state 'Align'..
 		"""
@@ -762,37 +845,6 @@ class Model:
 		self.__state_conf_vector_position = 0
 		self.__state_conf_vector_changed = True
 		
-	def __enter_sequence_logging_unit_startup_default(self):
-		"""'default' enter sequence for state Startup.
-		"""
-		self.__entry_action_logging_unit_startup()
-		self.__state_vector[1] = self.State.logging_unit_startup
-		self.__state_conf_vector_position = 1
-		self.__state_conf_vector_changed = True
-		
-	def __enter_sequence_logging_unit_manual_default(self):
-		"""'default' enter sequence for state Manual.
-		"""
-		self.__state_vector[1] = self.State.logging_unit_manual
-		self.__state_conf_vector_position = 1
-		self.__state_conf_vector_changed = True
-		
-	def __enter_sequence_logging_unit_retrieve_current_state_default(self):
-		"""'default' enter sequence for state Retrieve current state.
-		"""
-		self.__entry_action_logging_unit_retrieve_current_state()
-		self.__state_vector[1] = self.State.logging_unit_retrieve_current_state
-		self.__state_conf_vector_position = 1
-		self.__state_conf_vector_changed = True
-		
-	def __enter_sequence_logging_unit_check_current_walls_default(self):
-		"""'default' enter sequence for state check current walls.
-		"""
-		self.__entry_action_logging_unit_check_current_walls()
-		self.__state_vector[1] = self.State.logging_unit_check_current_walls
-		self.__state_conf_vector_position = 1
-		self.__state_conf_vector_changed = True
-		
 	def __enter_sequence_driving_component_diriving_default(self):
 		"""'default' enter sequence for state Diriving.
 		"""
@@ -802,45 +854,45 @@ class Model:
 		"""'default' enter sequence for state Align.
 		"""
 		self.__entry_action_driving_component_diriving_r1_align()
-		self.__state_vector[2] = self.State.driving_component_diriving_r1align
-		self.__state_conf_vector_position = 2
+		self.__state_vector[1] = self.State.driving_component_diriving_r1align
+		self.__state_conf_vector_position = 1
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_driving_component_diriving_r1_iteration_default(self):
 		"""'default' enter sequence for state Iteration.
 		"""
-		self.__state_vector[2] = self.State.driving_component_diriving_r1iteration
-		self.__state_conf_vector_position = 2
+		self.__state_vector[1] = self.State.driving_component_diriving_r1iteration
+		self.__state_conf_vector_position = 1
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_driving_component_diriving_r1_rotate_left_default(self):
 		"""'default' enter sequence for state Rotate left.
 		"""
 		self.__entry_action_driving_component_diriving_r1_rotate_left()
-		self.__state_vector[2] = self.State.driving_component_diriving_r1rotate_left
-		self.__state_conf_vector_position = 2
+		self.__state_vector[1] = self.State.driving_component_diriving_r1rotate_left
+		self.__state_conf_vector_position = 1
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_driving_component_diriving_r1_move_forward_default(self):
 		"""'default' enter sequence for state Move forward.
 		"""
 		self.__entry_action_driving_component_diriving_r1_move_forward()
-		self.__state_vector[2] = self.State.driving_component_diriving_r1move_forward
-		self.__state_conf_vector_position = 2
+		self.__state_vector[1] = self.State.driving_component_diriving_r1move_forward
+		self.__state_conf_vector_position = 1
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_driving_component_manual_default(self):
 		"""'default' enter sequence for state Manual.
 		"""
-		self.__state_vector[2] = self.State.driving_component_manual
-		self.__state_conf_vector_position = 2
+		self.__state_vector[1] = self.State.driving_component_manual
+		self.__state_conf_vector_position = 1
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_logic_component_manual_default(self):
 		"""'default' enter sequence for state Manual.
 		"""
-		self.__state_vector[3] = self.State.logic_component_manual
-		self.__state_conf_vector_position = 3
+		self.__state_vector[2] = self.State.logic_component_manual
+		self.__state_conf_vector_position = 2
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_logic_component_maze_algorithm_default(self):
@@ -852,46 +904,98 @@ class Model:
 		"""'default' enter sequence for state Setup.
 		"""
 		self.__entry_action_logic_component_maze_algorithm_r1_setup()
-		self.__state_vector[3] = self.State.logic_component_maze_algorithm_r1setup
-		self.__state_conf_vector_position = 3
+		self.__state_vector[2] = self.State.logic_component_maze_algorithm_r1setup
+		self.__state_conf_vector_position = 2
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_logic_component_maze_algorithm_r1_find_target_alignment_default(self):
 		"""'default' enter sequence for state Find target alignment.
 		"""
 		self.__entry_action_logic_component_maze_algorithm_r1_find_target_alignment()
-		self.__state_vector[3] = self.State.logic_component_maze_algorithm_r1find_target_alignment
-		self.__state_conf_vector_position = 3
+		self.__state_vector[2] = self.State.logic_component_maze_algorithm_r1find_target_alignment
+		self.__state_conf_vector_position = 2
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_logic_component_maze_algorithm_r1_realign_default(self):
 		"""'default' enter sequence for state Realign.
 		"""
 		self.__entry_action_logic_component_maze_algorithm_r1_realign()
-		self.__state_vector[3] = self.State.logic_component_maze_algorithm_r1realign
-		self.__state_conf_vector_position = 3
+		self.__state_vector[2] = self.State.logic_component_maze_algorithm_r1realign
+		self.__state_conf_vector_position = 2
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_logic_component_maze_algorithm_r1_move_forward_default(self):
 		"""'default' enter sequence for state Move forward.
 		"""
 		self.__entry_action_logic_component_maze_algorithm_r1_move_forward()
-		self.__state_vector[3] = self.State.logic_component_maze_algorithm_r1move_forward
-		self.__state_conf_vector_position = 3
+		self.__state_vector[2] = self.State.logic_component_maze_algorithm_r1move_forward
+		self.__state_conf_vector_position = 2
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_alignment_alignment_unit_default(self):
 		"""'default' enter sequence for state Alignment unit.
 		"""
 		self.__entry_action_alignment_alignment_unit()
-		self.__state_vector[4] = self.State.alignment_alignment_unit
-		self.__state_conf_vector_position = 4
+		self.__state_vector[3] = self.State.alignment_alignment_unit
+		self.__state_conf_vector_position = 3
 		self.__state_conf_vector_changed = True
 		
 	def __enter_sequence_alignment_alignment_off_default(self):
 		"""'default' enter sequence for state Alignment off.
 		"""
-		self.__state_vector[4] = self.State.alignment_alignment_off
+		self.__state_vector[3] = self.State.alignment_alignment_off
+		self.__state_conf_vector_position = 3
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logging_component_map_left_wall_default(self):
+		"""'default' enter sequence for state Map left wall.
+		"""
+		self.__entry_action_logging_component_map_left_wall()
+		self.__state_vector[4] = self.State.logging_component_map_left_wall
+		self.__state_conf_vector_position = 4
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logging_component_manual_default(self):
+		"""'default' enter sequence for state Manual.
+		"""
+		self.__state_vector[4] = self.State.logging_component_manual
+		self.__state_conf_vector_position = 4
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logging_component_update_state_default(self):
+		"""'default' enter sequence for state Update state.
+		"""
+		self.__entry_action_logging_component_update_state()
+		self.__state_vector[4] = self.State.logging_component_update_state
+		self.__state_conf_vector_position = 4
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logging_component_map_open_wall_default(self):
+		"""'default' enter sequence for state Map Open Wall.
+		"""
+		self.__entry_action_logging_component_map_open_wall()
+		self.__state_vector[4] = self.State.logging_component_map_open_wall
+		self.__state_conf_vector_position = 4
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logging_component_wait_until_zero_state_set_default(self):
+		"""'default' enter sequence for state wait until zero state set.
+		"""
+		self.__state_vector[4] = self.State.logging_component_wait_until_zero_state_set
+		self.__state_conf_vector_position = 4
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logging_component_wait_until_received_default(self):
+		"""'default' enter sequence for state Wait until received.
+		"""
+		self.__state_vector[4] = self.State.logging_component_wait_until_received
+		self.__state_conf_vector_position = 4
+		self.__state_conf_vector_changed = True
+		
+	def __enter_sequence_logging_component_wait_until_received_2_default(self):
+		"""'default' enter sequence for state Wait until received 2.
+		"""
+		self.__state_vector[4] = self.State.logging_component_wait_until_received_2
 		self.__state_conf_vector_position = 4
 		self.__state_conf_vector_changed = True
 		
@@ -899,11 +1003,6 @@ class Model:
 		"""'default' enter sequence for region Manual Control Component.
 		"""
 		self.__react_manual_control_component__entry_default()
-		
-	def __enter_sequence_logging_unit_default(self):
-		"""'default' enter sequence for region Logging unit.
-		"""
-		self.__react_logging_unit__entry_default()
 		
 	def __enter_sequence_driving_component_default(self):
 		"""'default' enter sequence for region Driving Component.
@@ -930,6 +1029,11 @@ class Model:
 		"""
 		self.__react_alignment__entry_default()
 		
+	def __enter_sequence_logging_component_default(self):
+		"""'default' enter sequence for region Logging component.
+		"""
+		self.__react_logging_component__entry_default()
+		
 	def __exit_sequence_manual_control_component_awaiting_input(self):
 		"""Default exit sequence for state Awaiting input.
 		"""
@@ -942,30 +1046,6 @@ class Model:
 		self.__state_vector[0] = self.State.null_state
 		self.__state_conf_vector_position = 0
 		
-	def __exit_sequence_logging_unit_startup(self):
-		"""Default exit sequence for state Startup.
-		"""
-		self.__state_vector[1] = self.State.null_state
-		self.__state_conf_vector_position = 1
-		
-	def __exit_sequence_logging_unit_manual(self):
-		"""Default exit sequence for state Manual.
-		"""
-		self.__state_vector[1] = self.State.null_state
-		self.__state_conf_vector_position = 1
-		
-	def __exit_sequence_logging_unit_retrieve_current_state(self):
-		"""Default exit sequence for state Retrieve current state.
-		"""
-		self.__state_vector[1] = self.State.null_state
-		self.__state_conf_vector_position = 1
-		
-	def __exit_sequence_logging_unit_check_current_walls(self):
-		"""Default exit sequence for state check current walls.
-		"""
-		self.__state_vector[1] = self.State.null_state
-		self.__state_conf_vector_position = 1
-		
 	def __exit_sequence_driving_component_diriving(self):
 		"""Default exit sequence for state Diriving.
 		"""
@@ -974,41 +1054,41 @@ class Model:
 	def __exit_sequence_driving_component_diriving_r1_align(self):
 		"""Default exit sequence for state Align.
 		"""
-		self.__state_vector[2] = self.State.null_state
-		self.__state_conf_vector_position = 2
+		self.__state_vector[1] = self.State.null_state
+		self.__state_conf_vector_position = 1
 		self.__exit_action_driving_component_diriving_r1_align()
 		
 	def __exit_sequence_driving_component_diriving_r1_iteration(self):
 		"""Default exit sequence for state Iteration.
 		"""
-		self.__state_vector[2] = self.State.null_state
-		self.__state_conf_vector_position = 2
+		self.__state_vector[1] = self.State.null_state
+		self.__state_conf_vector_position = 1
 		
 	def __exit_sequence_driving_component_diriving_r1_rotate_left(self):
 		"""Default exit sequence for state Rotate left.
 		"""
-		self.__state_vector[2] = self.State.null_state
-		self.__state_conf_vector_position = 2
+		self.__state_vector[1] = self.State.null_state
+		self.__state_conf_vector_position = 1
 		self.__exit_action_driving_component_diriving_r1_rotate_left()
 		
 	def __exit_sequence_driving_component_diriving_r1_move_forward(self):
 		"""Default exit sequence for state Move forward.
 		"""
-		self.__state_vector[2] = self.State.null_state
-		self.__state_conf_vector_position = 2
+		self.__state_vector[1] = self.State.null_state
+		self.__state_conf_vector_position = 1
 		self.__exit_action_driving_component_diriving_r1_move_forward()
 		
 	def __exit_sequence_driving_component_manual(self):
 		"""Default exit sequence for state Manual.
 		"""
-		self.__state_vector[2] = self.State.null_state
-		self.__state_conf_vector_position = 2
+		self.__state_vector[1] = self.State.null_state
+		self.__state_conf_vector_position = 1
 		
 	def __exit_sequence_logic_component_manual(self):
 		"""Default exit sequence for state Manual.
 		"""
-		self.__state_vector[3] = self.State.null_state
-		self.__state_conf_vector_position = 3
+		self.__state_vector[2] = self.State.null_state
+		self.__state_conf_vector_position = 2
 		
 	def __exit_sequence_logic_component_maze_algorithm(self):
 		"""Default exit sequence for state Maze algorithm.
@@ -1018,36 +1098,78 @@ class Model:
 	def __exit_sequence_logic_component_maze_algorithm_r1_setup(self):
 		"""Default exit sequence for state Setup.
 		"""
-		self.__state_vector[3] = self.State.null_state
-		self.__state_conf_vector_position = 3
+		self.__state_vector[2] = self.State.null_state
+		self.__state_conf_vector_position = 2
 		self.__exit_action_logic_component_maze_algorithm_r1_setup()
 		
 	def __exit_sequence_logic_component_maze_algorithm_r1_find_target_alignment(self):
 		"""Default exit sequence for state Find target alignment.
 		"""
-		self.__state_vector[3] = self.State.null_state
-		self.__state_conf_vector_position = 3
+		self.__state_vector[2] = self.State.null_state
+		self.__state_conf_vector_position = 2
 		
 	def __exit_sequence_logic_component_maze_algorithm_r1_realign(self):
 		"""Default exit sequence for state Realign.
 		"""
-		self.__state_vector[3] = self.State.null_state
-		self.__state_conf_vector_position = 3
+		self.__state_vector[2] = self.State.null_state
+		self.__state_conf_vector_position = 2
 		
 	def __exit_sequence_logic_component_maze_algorithm_r1_move_forward(self):
 		"""Default exit sequence for state Move forward.
 		"""
-		self.__state_vector[3] = self.State.null_state
-		self.__state_conf_vector_position = 3
+		self.__state_vector[2] = self.State.null_state
+		self.__state_conf_vector_position = 2
 		
 	def __exit_sequence_alignment_alignment_unit(self):
 		"""Default exit sequence for state Alignment unit.
 		"""
-		self.__state_vector[4] = self.State.null_state
-		self.__state_conf_vector_position = 4
+		self.__state_vector[3] = self.State.null_state
+		self.__state_conf_vector_position = 3
 		
 	def __exit_sequence_alignment_alignment_off(self):
 		"""Default exit sequence for state Alignment off.
+		"""
+		self.__state_vector[3] = self.State.null_state
+		self.__state_conf_vector_position = 3
+		
+	def __exit_sequence_logging_component_map_left_wall(self):
+		"""Default exit sequence for state Map left wall.
+		"""
+		self.__state_vector[4] = self.State.null_state
+		self.__state_conf_vector_position = 4
+		
+	def __exit_sequence_logging_component_manual(self):
+		"""Default exit sequence for state Manual.
+		"""
+		self.__state_vector[4] = self.State.null_state
+		self.__state_conf_vector_position = 4
+		
+	def __exit_sequence_logging_component_update_state(self):
+		"""Default exit sequence for state Update state.
+		"""
+		self.__state_vector[4] = self.State.null_state
+		self.__state_conf_vector_position = 4
+		
+	def __exit_sequence_logging_component_map_open_wall(self):
+		"""Default exit sequence for state Map Open Wall.
+		"""
+		self.__state_vector[4] = self.State.null_state
+		self.__state_conf_vector_position = 4
+		
+	def __exit_sequence_logging_component_wait_until_zero_state_set(self):
+		"""Default exit sequence for state wait until zero state set.
+		"""
+		self.__state_vector[4] = self.State.null_state
+		self.__state_conf_vector_position = 4
+		
+	def __exit_sequence_logging_component_wait_until_received(self):
+		"""Default exit sequence for state Wait until received.
+		"""
+		self.__state_vector[4] = self.State.null_state
+		self.__state_conf_vector_position = 4
+		
+	def __exit_sequence_logging_component_wait_until_received_2(self):
+		"""Default exit sequence for state Wait until received 2.
 		"""
 		self.__state_vector[4] = self.State.null_state
 		self.__state_conf_vector_position = 4
@@ -1061,23 +1183,10 @@ class Model:
 		elif state == self.State.manual_control_component_automatic_mode:
 			self.__exit_sequence_manual_control_component_automatic_mode()
 		
-	def __exit_sequence_logging_unit(self):
-		"""Default exit sequence for region Logging unit.
-		"""
-		state = self.__state_vector[1]
-		if state == self.State.logging_unit_startup:
-			self.__exit_sequence_logging_unit_startup()
-		elif state == self.State.logging_unit_manual:
-			self.__exit_sequence_logging_unit_manual()
-		elif state == self.State.logging_unit_retrieve_current_state:
-			self.__exit_sequence_logging_unit_retrieve_current_state()
-		elif state == self.State.logging_unit_check_current_walls:
-			self.__exit_sequence_logging_unit_check_current_walls()
-		
 	def __exit_sequence_driving_component(self):
 		"""Default exit sequence for region Driving Component.
 		"""
-		state = self.__state_vector[2]
+		state = self.__state_vector[1]
 		if state == self.State.driving_component_diriving_r1align:
 			self.__exit_sequence_driving_component_diriving_r1_align()
 		elif state == self.State.driving_component_diriving_r1iteration:
@@ -1092,7 +1201,7 @@ class Model:
 	def __exit_sequence_driving_component_diriving_r1(self):
 		"""Default exit sequence for region r1.
 		"""
-		state = self.__state_vector[2]
+		state = self.__state_vector[1]
 		if state == self.State.driving_component_diriving_r1align:
 			self.__exit_sequence_driving_component_diriving_r1_align()
 		elif state == self.State.driving_component_diriving_r1iteration:
@@ -1105,7 +1214,7 @@ class Model:
 	def __exit_sequence_logic_component(self):
 		"""Default exit sequence for region Logic Component.
 		"""
-		state = self.__state_vector[3]
+		state = self.__state_vector[2]
 		if state == self.State.logic_component_manual:
 			self.__exit_sequence_logic_component_manual()
 		elif state == self.State.logic_component_maze_algorithm_r1setup:
@@ -1120,7 +1229,7 @@ class Model:
 	def __exit_sequence_logic_component_maze_algorithm_r1(self):
 		"""Default exit sequence for region r1.
 		"""
-		state = self.__state_vector[3]
+		state = self.__state_vector[2]
 		if state == self.State.logic_component_maze_algorithm_r1setup:
 			self.__exit_sequence_logic_component_maze_algorithm_r1_setup()
 		elif state == self.State.logic_component_maze_algorithm_r1find_target_alignment:
@@ -1133,21 +1242,35 @@ class Model:
 	def __exit_sequence_alignment(self):
 		"""Default exit sequence for region Alignment.
 		"""
-		state = self.__state_vector[4]
+		state = self.__state_vector[3]
 		if state == self.State.alignment_alignment_unit:
 			self.__exit_sequence_alignment_alignment_unit()
 		elif state == self.State.alignment_alignment_off:
 			self.__exit_sequence_alignment_alignment_off()
 		
+	def __exit_sequence_logging_component(self):
+		"""Default exit sequence for region Logging component.
+		"""
+		state = self.__state_vector[4]
+		if state == self.State.logging_component_map_left_wall:
+			self.__exit_sequence_logging_component_map_left_wall()
+		elif state == self.State.logging_component_manual:
+			self.__exit_sequence_logging_component_manual()
+		elif state == self.State.logging_component_update_state:
+			self.__exit_sequence_logging_component_update_state()
+		elif state == self.State.logging_component_map_open_wall:
+			self.__exit_sequence_logging_component_map_open_wall()
+		elif state == self.State.logging_component_wait_until_zero_state_set:
+			self.__exit_sequence_logging_component_wait_until_zero_state_set()
+		elif state == self.State.logging_component_wait_until_received:
+			self.__exit_sequence_logging_component_wait_until_received()
+		elif state == self.State.logging_component_wait_until_received_2:
+			self.__exit_sequence_logging_component_wait_until_received_2()
+		
 	def __react_manual_control_component__entry_default(self):
 		"""Default react sequence for initial entry .
 		"""
 		self.__enter_sequence_manual_control_component_awaiting_input_default()
-		
-	def __react_logging_unit__entry_default(self):
-		"""Default react sequence for initial entry .
-		"""
-		self.__enter_sequence_logging_unit_manual_default()
 		
 	def __react_driving_component_diriving_r1__entry_default(self):
 		"""Default react sequence for initial entry .
@@ -1173,6 +1296,11 @@ class Model:
 		"""Default react sequence for initial entry .
 		"""
 		self.__enter_sequence_alignment_alignment_off_default()
+		
+	def __react_logging_component__entry_default(self):
+		"""Default react sequence for initial entry .
+		"""
+		self.__enter_sequence_logging_component_manual_default()
 		
 	def __react(self, transitioned_before):
 		"""Implementation of __react function.
@@ -1219,70 +1347,15 @@ class Model:
 		return transitioned_after
 	
 	
-	def __logging_unit_startup_react(self, transitioned_before):
-		"""Implementation of __logging_unit_startup_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 1:
-			self.__exit_sequence_logging_unit_startup()
-			self.__enter_sequence_logging_unit_check_current_walls_default()
-			transitioned_after = 1
-		return transitioned_after
-	
-	
-	def __logging_unit_manual_react(self, transitioned_before):
-		"""Implementation of __logging_unit_manual_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 1:
-			if self.automatic_mode:
-				self.__exit_sequence_logging_unit_manual()
-				self.__enter_sequence_logging_unit_check_current_walls_default()
-				transitioned_after = 1
-		return transitioned_after
-	
-	
-	def __logging_unit_retrieve_current_state_react(self, transitioned_before):
-		"""Implementation of __logging_unit_retrieve_current_state_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 1:
-			if self.__aligned:
-				self.__exit_sequence_logging_unit_retrieve_current_state()
-				self.__enter_sequence_logging_unit_startup_default()
-				transitioned_after = 1
-			elif not self.__aligned:
-				self.__exit_sequence_logging_unit_retrieve_current_state()
-				self.__enter_sequence_logging_unit_check_current_walls_default()
-				transitioned_after = 1
-		return transitioned_after
-	
-	
-	def __logging_unit_check_current_walls_react(self, transitioned_before):
-		"""Implementation of __logging_unit_check_current_walls_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 1:
-			if self.grid.wall_front == -1:
-				self.__exit_sequence_logging_unit_check_current_walls()
-				self.__enter_sequence_logging_unit_retrieve_current_state_default()
-				transitioned_after = 1
-			elif self.tick:
-				self.__exit_sequence_logging_unit_check_current_walls()
-				self.__enter_sequence_logging_unit_check_current_walls_default()
-				transitioned_after = 1
-		return transitioned_after
-	
-	
 	def __driving_component_diriving_react(self, transitioned_before):
 		"""Implementation of __driving_component_diriving_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 2:
+		if transitioned_after < 1:
 			if self.manual_mode:
 				self.__exit_sequence_driving_component_diriving()
 				self.__enter_sequence_driving_component_manual_default()
-				transitioned_after = 2
+				transitioned_after = 1
 		return transitioned_after
 	
 	
@@ -1290,12 +1363,12 @@ class Model:
 		"""Implementation of __driving_component_diriving_r1_align_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 2:
+		if transitioned_after < 1:
 			if self.turned:
 				self.__exit_sequence_driving_component_diriving_r1_align()
 				self.__enter_sequence_driving_component_diriving_r1_iteration_default()
-				self.__driving_component_diriving_react(2)
-				transitioned_after = 2
+				self.__driving_component_diriving_react(1)
+				transitioned_after = 1
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
 			transitioned_after = self.__driving_component_diriving_react(transitioned_before)
@@ -1306,22 +1379,22 @@ class Model:
 		"""Implementation of __driving_component_diriving_r1_iteration_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 2:
+		if transitioned_after < 1:
 			if self.turn_left:
 				self.__exit_sequence_driving_component_diriving_r1_iteration()
 				self.__enter_sequence_driving_component_diriving_r1_rotate_left_default()
-				self.__driving_component_diriving_react(2)
-				transitioned_after = 2
+				self.__driving_component_diriving_react(1)
+				transitioned_after = 1
 			elif self.turn_right:
 				self.__exit_sequence_driving_component_diriving_r1_iteration()
 				self.__enter_sequence_driving_component_diriving_r1_align_default()
-				self.__driving_component_diriving_react(2)
-				transitioned_after = 2
+				self.__driving_component_diriving_react(1)
+				transitioned_after = 1
 			elif self.move_forward:
 				self.__exit_sequence_driving_component_diriving_r1_iteration()
 				self.__enter_sequence_driving_component_diriving_r1_move_forward_default()
-				self.__driving_component_diriving_react(2)
-				transitioned_after = 2
+				self.__driving_component_diriving_react(1)
+				transitioned_after = 1
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
 			transitioned_after = self.__driving_component_diriving_react(transitioned_before)
@@ -1332,12 +1405,12 @@ class Model:
 		"""Implementation of __driving_component_diriving_r1_rotate_left_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 2:
+		if transitioned_after < 1:
 			if self.turned:
 				self.__exit_sequence_driving_component_diriving_r1_rotate_left()
 				self.__enter_sequence_driving_component_diriving_r1_iteration_default()
-				self.__driving_component_diriving_react(2)
-				transitioned_after = 2
+				self.__driving_component_diriving_react(1)
+				transitioned_after = 1
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
 			transitioned_after = self.__driving_component_diriving_react(transitioned_before)
@@ -1348,12 +1421,12 @@ class Model:
 		"""Implementation of __driving_component_diriving_r1_move_forward_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 2:
+		if transitioned_after < 1:
 			if self.moved_forward:
 				self.__exit_sequence_driving_component_diriving_r1_move_forward()
 				self.__enter_sequence_driving_component_diriving_r1_iteration_default()
-				self.__driving_component_diriving_react(2)
-				transitioned_after = 2
+				self.__driving_component_diriving_react(1)
+				transitioned_after = 1
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
 			transitioned_after = self.__driving_component_diriving_react(transitioned_before)
@@ -1364,11 +1437,11 @@ class Model:
 		"""Implementation of __driving_component_manual_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 2:
+		if transitioned_after < 1:
 			if self.automatic_mode:
 				self.__exit_sequence_driving_component_manual()
 				self.__enter_sequence_driving_component_diriving_default()
-				transitioned_after = 2
+				transitioned_after = 1
 		return transitioned_after
 	
 	
@@ -1376,11 +1449,11 @@ class Model:
 		"""Implementation of __logic_component_manual_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 3:
+		if transitioned_after < 2:
 			if self.automatic_mode:
 				self.__exit_sequence_logic_component_manual()
 				self.__enter_sequence_logic_component_maze_algorithm_default()
-				transitioned_after = 3
+				transitioned_after = 2
 		return transitioned_after
 	
 	
@@ -1388,11 +1461,11 @@ class Model:
 		"""Implementation of __logic_component_maze_algorithm_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 3:
+		if transitioned_after < 2:
 			if self.manual_mode:
 				self.__exit_sequence_logic_component_maze_algorithm()
 				self.__enter_sequence_logic_component_manual_default()
-				transitioned_after = 3
+				transitioned_after = 2
 		return transitioned_after
 	
 	
@@ -1400,12 +1473,12 @@ class Model:
 		"""Implementation of __logic_component_maze_algorithm_r1_setup_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 3:
+		if transitioned_after < 2:
 			if self.__time_events[0]:
 				self.__exit_sequence_logic_component_maze_algorithm_r1_setup()
 				self.__enter_sequence_logic_component_maze_algorithm_r1_find_target_alignment_default()
-				self.__logic_component_maze_algorithm_react(3)
-				transitioned_after = 3
+				self.__logic_component_maze_algorithm_react(2)
+				transitioned_after = 2
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
 			transitioned_after = self.__logic_component_maze_algorithm_react(transitioned_before)
@@ -1416,11 +1489,11 @@ class Model:
 		"""Implementation of __logic_component_maze_algorithm_r1_find_target_alignment_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 3:
+		if transitioned_after < 2:
 			self.__exit_sequence_logic_component_maze_algorithm_r1_find_target_alignment()
 			self.__enter_sequence_logic_component_maze_algorithm_r1_realign_default()
-			self.__logic_component_maze_algorithm_react(3)
-			transitioned_after = 3
+			self.__logic_component_maze_algorithm_react(2)
+			transitioned_after = 2
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
 			transitioned_after = self.__logic_component_maze_algorithm_react(transitioned_before)
@@ -1431,12 +1504,12 @@ class Model:
 		"""Implementation of __logic_component_maze_algorithm_r1_realign_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 3:
+		if transitioned_after < 2:
 			if self.rotation_aligned:
 				self.__exit_sequence_logic_component_maze_algorithm_r1_realign()
 				self.__enter_sequence_logic_component_maze_algorithm_r1_move_forward_default()
-				self.__logic_component_maze_algorithm_react(3)
-				transitioned_after = 3
+				self.__logic_component_maze_algorithm_react(2)
+				transitioned_after = 2
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
 			transitioned_after = self.__logic_component_maze_algorithm_react(transitioned_before)
@@ -1447,13 +1520,13 @@ class Model:
 		"""Implementation of __logic_component_maze_algorithm_r1_move_forward_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 3:
+		if transitioned_after < 2:
 			if (self.__target_x - self.odom.x) < 0.03 and (self.odom.x - self.__target_x) < 0.03 and (self.__target_y - self.odom.y) < 0.03 and (self.odom.y - self.__target_y) < 0.03:
 				self.__exit_sequence_logic_component_maze_algorithm_r1_move_forward()
 				self.raise_moved_forward()
 				self.__enter_sequence_logic_component_maze_algorithm_r1_find_target_alignment_default()
-				self.__logic_component_maze_algorithm_react(3)
-				transitioned_after = 3
+				self.__logic_component_maze_algorithm_react(2)
+				transitioned_after = 2
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
 			transitioned_after = self.__logic_component_maze_algorithm_react(transitioned_before)
@@ -1464,12 +1537,36 @@ class Model:
 		"""Implementation of __alignment_alignment_unit_react function.
 		"""
 		transitioned_after = transitioned_before
-		if transitioned_after < 4:
+		if transitioned_after < 3:
 			if ((self.imu.yaw - self.__target_yaw)) <= self.__limit_degree_low and (self.__target_yaw - self.imu.yaw) <= self.__limit_degree_low:
 				self.__exit_sequence_alignment_alignment_unit()
 				self.raise_turned()
 				self.raise_rotation_aligned()
 				self.__enter_sequence_alignment_alignment_off_default()
+				transitioned_after = 3
+		return transitioned_after
+	
+	
+	def __alignment_alignment_off_react(self, transitioned_before):
+		"""Implementation of __alignment_alignment_off_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 3:
+			if self.align_rotation:
+				self.__exit_sequence_alignment_alignment_off()
+				self.__enter_sequence_alignment_alignment_unit_default()
+				transitioned_after = 3
+		return transitioned_after
+	
+	
+	def __logging_component_map_left_wall_react(self, transitioned_before):
+		"""Implementation of __logging_component_map_left_wall_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 4:
+			if self.tick:
+				self.__exit_sequence_logging_component_map_left_wall()
+				self.__enter_sequence_logging_component_update_state_default()
 				self.__react(0)
 				transitioned_after = 4
 		#If no transition was taken then execute local reactions
@@ -1478,14 +1575,104 @@ class Model:
 		return transitioned_after
 	
 	
-	def __alignment_alignment_off_react(self, transitioned_before):
-		"""Implementation of __alignment_alignment_off_react function.
+	def __logging_component_manual_react(self, transitioned_before):
+		"""Implementation of __logging_component_manual_react function.
 		"""
 		transitioned_after = transitioned_before
 		if transitioned_after < 4:
-			if self.align_rotation:
-				self.__exit_sequence_alignment_alignment_off()
-				self.__enter_sequence_alignment_alignment_unit_default()
+			if self.automatic_mode:
+				self.__exit_sequence_logging_component_manual()
+				self.__enter_sequence_logging_component_wait_until_zero_state_set_default()
+				self.__react(0)
+				transitioned_after = 4
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __logging_component_update_state_react(self, transitioned_before):
+		"""Implementation of __logging_component_update_state_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 4:
+			if (self.grid.wall_left == -1) and self.__yaw_aligned and self.__position_aligned:
+				self.__exit_sequence_logging_component_update_state()
+				self.__enter_sequence_logging_component_wait_until_received_2_default()
+				self.__react(0)
+				transitioned_after = 4
+			elif self.__update_cell_transition and (self.grid.column != self.__previous_column or self.grid.row != self.__previous_row):
+				self.__exit_sequence_logging_component_update_state()
+				self.__enter_sequence_logging_component_wait_until_received_default()
+				self.__react(0)
+				transitioned_after = 4
+			elif self.tick:
+				self.__exit_sequence_logging_component_update_state()
+				self.__enter_sequence_logging_component_update_state_default()
+				self.__react(0)
+				transitioned_after = 4
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __logging_component_map_open_wall_react(self, transitioned_before):
+		"""Implementation of __logging_component_map_open_wall_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 4:
+			if self.tick:
+				self.__exit_sequence_logging_component_map_open_wall()
+				self.__enter_sequence_logging_component_update_state_default()
+				self.__react(0)
+				transitioned_after = 4
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __logging_component_wait_until_zero_state_set_react(self, transitioned_before):
+		"""Implementation of __logging_component_wait_until_zero_state_set_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 4:
+			if self.tick:
+				self.__exit_sequence_logging_component_wait_until_zero_state_set()
+				self.__enter_sequence_logging_component_update_state_default()
+				self.__react(0)
+				transitioned_after = 4
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __logging_component_wait_until_received_react(self, transitioned_before):
+		"""Implementation of __logging_component_wait_until_received_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 4:
+			if self.tick:
+				self.__exit_sequence_logging_component_wait_until_received()
+				self.__enter_sequence_logging_component_map_open_wall_default()
+				self.__react(0)
+				transitioned_after = 4
+		#If no transition was taken then execute local reactions
+		if transitioned_after == transitioned_before:
+			transitioned_after = self.__react(transitioned_before)
+		return transitioned_after
+	
+	
+	def __logging_component_wait_until_received_2_react(self, transitioned_before):
+		"""Implementation of __logging_component_wait_until_received_2_react function.
+		"""
+		transitioned_after = transitioned_before
+		if transitioned_after < 4:
+			if self.tick:
+				self.__exit_sequence_logging_component_wait_until_received_2()
+				self.__enter_sequence_logging_component_map_left_wall_default()
 				self.__react(0)
 				transitioned_after = 4
 		#If no transition was taken then execute local reactions
@@ -1535,16 +1722,6 @@ class Model:
 			transitioned = self.__manual_control_component_automatic_mode_react(transitioned)
 		if self.__state_conf_vector_position < 1:
 			state = self.__state_vector[1]
-			if state == self.State.logging_unit_startup:
-				transitioned = self.__logging_unit_startup_react(transitioned)
-			elif state == self.State.logging_unit_manual:
-				transitioned = self.__logging_unit_manual_react(transitioned)
-			elif state == self.State.logging_unit_retrieve_current_state:
-				transitioned = self.__logging_unit_retrieve_current_state_react(transitioned)
-			elif state == self.State.logging_unit_check_current_walls:
-				transitioned = self.__logging_unit_check_current_walls_react(transitioned)
-		if self.__state_conf_vector_position < 2:
-			state = self.__state_vector[2]
 			if state == self.State.driving_component_diriving_r1align:
 				transitioned = self.__driving_component_diriving_r1_align_react(transitioned)
 			elif state == self.State.driving_component_diriving_r1iteration:
@@ -1555,8 +1732,8 @@ class Model:
 				transitioned = self.__driving_component_diriving_r1_move_forward_react(transitioned)
 			elif state == self.State.driving_component_manual:
 				transitioned = self.__driving_component_manual_react(transitioned)
-		if self.__state_conf_vector_position < 3:
-			state = self.__state_vector[3]
+		if self.__state_conf_vector_position < 2:
+			state = self.__state_vector[2]
 			if state == self.State.logic_component_manual:
 				transitioned = self.__logic_component_manual_react(transitioned)
 			elif state == self.State.logic_component_maze_algorithm_r1setup:
@@ -1567,12 +1744,28 @@ class Model:
 				transitioned = self.__logic_component_maze_algorithm_r1_realign_react(transitioned)
 			elif state == self.State.logic_component_maze_algorithm_r1move_forward:
 				transitioned = self.__logic_component_maze_algorithm_r1_move_forward_react(transitioned)
-		if self.__state_conf_vector_position < 4:
-			state = self.__state_vector[4]
+		if self.__state_conf_vector_position < 3:
+			state = self.__state_vector[3]
 			if state == self.State.alignment_alignment_unit:
 				transitioned = self.__alignment_alignment_unit_react(transitioned)
 			elif state == self.State.alignment_alignment_off:
 				transitioned = self.__alignment_alignment_off_react(transitioned)
+		if self.__state_conf_vector_position < 4:
+			state = self.__state_vector[4]
+			if state == self.State.logging_component_map_left_wall:
+				transitioned = self.__logging_component_map_left_wall_react(transitioned)
+			elif state == self.State.logging_component_manual:
+				transitioned = self.__logging_component_manual_react(transitioned)
+			elif state == self.State.logging_component_update_state:
+				transitioned = self.__logging_component_update_state_react(transitioned)
+			elif state == self.State.logging_component_map_open_wall:
+				transitioned = self.__logging_component_map_open_wall_react(transitioned)
+			elif state == self.State.logging_component_wait_until_zero_state_set:
+				transitioned = self.__logging_component_wait_until_zero_state_set_react(transitioned)
+			elif state == self.State.logging_component_wait_until_received:
+				transitioned = self.__logging_component_wait_until_received_react(transitioned)
+			elif state == self.State.logging_component_wait_until_received_2:
+				transitioned = self.__logging_component_wait_until_received_2_react(transitioned)
 	
 	
 	def run_cycle(self):
@@ -1610,10 +1803,10 @@ class Model:
 		self.__is_executing = True
 		self.timer_service.set_timer(self, 1, 100, True)
 		self.__enter_sequence_manual_control_component_default()
-		self.__enter_sequence_logging_unit_default()
 		self.__enter_sequence_driving_component_default()
 		self.__enter_sequence_logic_component_default()
 		self.__enter_sequence_alignment_default()
+		self.__enter_sequence_logging_component_default()
 		self.__is_executing = False
 	
 	
@@ -1624,10 +1817,10 @@ class Model:
 			return
 		self.__is_executing = True
 		self.__exit_sequence_manual_control_component()
-		self.__exit_sequence_logging_unit()
 		self.__exit_sequence_driving_component()
 		self.__exit_sequence_logic_component()
 		self.__exit_sequence_alignment()
+		self.__exit_sequence_logging_component()
 		self.timer_service.unset_timer(self, 1)
 		self.__is_executing = False
 	
