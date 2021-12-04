@@ -2,6 +2,10 @@
 # Created by https://www.toptal.com/developers/gitignore/api/eclipse,macos,linux,ros2
 # Edit at https://www.toptal.com/developers/gitignore?templates=eclipse,macos,linux,ros2
 
+model.py
+map_generation.png
+yakindu
+
 ### Eclipse ###
 .metadata
 bin/
