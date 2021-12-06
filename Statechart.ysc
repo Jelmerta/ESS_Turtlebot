@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:notation="http://www.eclipse.org/gmf/runtime/1.0.2/notation" xmlns:sgraph="http://www.yakindu.org/sct/sgraph/2.0.0">
-  <sgraph:Statechart xmi:id="_H3ZnkBtMEeuKLrIwlRh1BQ" specification="@EventDriven&#xA;@ChildFirstExecution&#xA;&#xA;internal:&#xA;&#x9;event tick&#xA;&#x9;&#xA;&#x9;event automatic_mode&#xA;&#x9;event manual_mode&#xA;&#x9;&#xA;&#x9;event align_rotation&#xA;&#x9;event turn_left&#xA;&#x9;event turn_right&#xA;&#x9;event move_forward&#xA;&#x9;&#xA;&#x9;event turned&#xA;&#x9;event rotation_aligned&#xA;&#x9;event moved_forward&#xA;&#x9;&#xA;&#x9;event logged&#xA;&#xA;&#x9;var baseSpeed:real = 0.05&#xA;&#x9;var baseRotation:real = 0.4&#xA;&#x9;&#xA;&#x9;var limitDegreeLow:real = 0.1&#xA;&#x9;var limitDegreeHigh = 5&#xA;&#x9;&#xA;&#x9;var tmpColumn:integer&#xA;&#x9;var tmpRow:integer&#xA;&#x9;&#xA;&#x9;var previousColumn:integer = 0&#xA;&#x9;var previousRow:integer = 0&#xA;&#x9;&#xA;&#x9;var transitioned:boolean = false&#xA;&#x9;&#xA;&#x9;var updateCellTransition:boolean = false&#xA;&#x9;&#xA;&#x9;var currentX:real&#xA;&#x9;var currentY:real&#xA;&#x9;&#xA;&#x9;var currentCellX:real&#xA;&#x9;var currentCellY:real&#xA;&#x9;&#xA;&#x9;var targetX:real&#xA;&#x9;var targetY:real&#xA;&#x9;var targetOrientation:integer&#xA;&#x9;&#xA;&#x9;var startprocedure:boolean = true&#xA;&#x9;&#xA;&#x9;var target_yaw:real&#xA;&#x9;var aligned:boolean&#xA;&#x9;&#xA;&#x9;var align_yaw:real&#xA;&#x9;var yaw_aligned:boolean&#xA;&#x9;var position_aligned:boolean&#xA;&#x9;&#xA;&#x9;every 100ms / raise tick&#xA;&#xA;interface:&#xA;operation abs(v:real):real&#xA;operation angle_diff(a:real,b:real):real&#xA;&#xA;// Static values&#xA;interface baseValues:&#xA;&#x9;var maxSpeed:real = 0.22&#xA;&#x9;var maxRotation:real = 2.84&#xA;&#x9;&#xA;&#x9;var degreesFront:integer = 10&#xA;&#x9;var degreesRight:integer = 10&#xA;&#x9;var degreesBack:integer = 10&#xA;&#x9;var degreesLeft:integer = 10&#xA;&#x9;&#xA;&#x9;var orientationNorth:integer = 0&#xA;&#x9;var orientationEast:integer = 1&#xA;&#x9;var orientationSouth:integer = 2&#xA;&#x9;var orientationWest:integer = 3&#xA;&#x9;&#xA;&#x9;var northDegree:integer = 90&#xA;&#x9;var eastDegree:integer = 0&#xA;&#x9;var southDegree:integer = -90&#xA;&#x9;var westDegree:integer = 180 // Or -180&#xA;&#x9;&#xA;&#x9;var northOrientationDegreeFrom:integer = 45&#xA;&#x9;var eastOrientationDegreeFrom:integer = -45&#xA;&#x9;var southOrientationDegreeFrom:integer = -135&#xA;&#x9;var westOrientationDegreeFrom1:integer = 135&#xA;&#x9;var westOrientationDegreeFrom2:integer = -180&#xA;&#xA;&#x9;var northOrientationDegreeTo:integer = 135&#xA;&#x9;var eastOrientationDegreeTo:integer = 45&#xA;&#x9;var southOrientationDegreeTo:integer = -45&#xA;&#x9;var westOrientationDegreeTo1:integer = 180&#xA;&#x9;var westOrientationDegreeTo2:integer = -135&#xA;&#xA;&#x9;&#xA;&#xA;////////////////////////////////////////////////&#xA;// These values are output.&#xA;// The code sends these either &#xA;// to the TurtleBot3, or &#xA;// uses it within the code&#xA;interface output:&#xA;&#x9;var speed:real&#xA;&#x9;var rotation:real&#xA;&#x9;&#xA;&#x9;var obstacles:integer = 0&#xA;&#x9;var gems:integer = 0&#xA;&#x9;&#xA;&#x9;var finish:integer = 0&#xA;&#xA;////////////////////////////////////////////////&#xA;// Keeps track of variables &#xA;// in the grid&#xA;interface grid:&#xA;&#x9;var update:boolean = false&#xA;&#x9;var receive:boolean = false&#xA;&#x9;&#xA;&#x9;var column:integer = 0&#xA;&#x9;var row:integer = 0&#xA;&#x9;var orientation:integer&#xA;&#x9;&#xA;&#x9;var visited:boolean // DOES ABSOLUTELY NOTHING -> NOT RETURNED DURING RECEIVE&#xA;&#x9;&#xA;&#x9;var wallFront:integer&#xA;&#x9;var wallRight:integer&#xA;&#x9;var wallBack:integer&#xA;&#x9;var wallLeft:integer&#xA;&#x9;&#xA;&#x9;var gridSize:real = 0.51&#xA;&#x9;var maxCol:integer = 3&#xA;&#x9;var maxRow:integer = 3&#xA;&#xA;////////////////////////////////////////////////&#xA;// Calibration variables&#xA;interface startPos:&#xA;&#x9;var setZero:boolean = false&#xA;&#x9;var zeroX:real&#xA;&#x9;var zeroY:real&#xA;&#x9;var zeroSouthDegree:real&#xA;&#x9;var laserDegOffset:integer&#xA;&#xA;&#xA;////////////////////////////////////////////////&#xA;// Keyboard input in the&#xA;// form of events&#xA;interface computer:&#xA;&#x9;in event m_press&#xA;&#x9;in event w_press&#xA;&#x9;in event a_press&#xA;&#x9;in event s_press&#xA;&#x9;in event d_press&#xA;&#x9;in event x_press&#xA;&#xA;////////////////////////////////////////////////&#xA;// The data from the IMU in&#xA;// Euler angles.&#xA;interface imu:&#xA;&#x9;var pitch:real&#xA;&#x9;var roll:real&#xA;&#x9;var yaw:real // 0 = east, 90 = north 180/-180 = west -90 = south&#xA;&#xA;////////////////////////////////////////////////&#xA;// The data from the odometry in&#xA;// the x, y and z directions.&#xA;interface odom:&#xA;&#x9;var x:real&#xA;&#x9;var y:real&#xA;&#x9;var z:real&#xA;&#xA;////////////////////////////////////////////////&#xA;// Distance data from the &#xA;// LDS&#xA;interface laserDistance:&#xA;&#x9;var d0:real&#xA;&#x9;var d90:real&#xA;&#x9;var d180:real&#xA;&#x9;var dm90:real&#xA;&#x9;&#xA;&#x9;var dMin:real&#xA;&#x9;var minDeg:integer&#xA;&#x9;&#xA;&#x9;var dMax:real&#xA;&#x9;var maxDeg:integer&#xA;&#x9;&#xA;&#x9;var dMean:real&#xA;&#x9;&#xA;&#x9;var dFrontMin:real&#xA;&#x9;var minDegF:integer&#xA;&#x9;var dFrontMax:real&#xA;&#x9;var maxDegF:integer&#xA;&#x9;var dFrontMean:real&#xA;&#x9;&#xA;&#x9;var dRightMin:real&#xA;&#x9;var minDegR:integer&#xA;&#x9;var dRightMax:real&#xA;&#x9;var maxDegR:integer&#xA;&#x9;var dRightMean:real&#xA;&#x9;&#xA;&#x9;var dBackMin:real&#xA;&#x9;var minDegB:integer&#xA;&#x9;var dBackMax:real&#xA;&#x9;var maxDegB:integer&#xA;&#x9;var dBackMean:real&#xA;&#x9;&#xA;&#x9;var dLeftMin:real&#xA;&#x9;var minDegL:integer&#xA;&#x9;var dLeftMax:real&#xA;&#x9;var maxDegL:integer&#xA;&#x9;var dLeftMean:real&#xA;&#xA;////////////////////////////////////////////////&#xA;// Intensity data from the &#xA;// LDS&#xA;interface laserIntensity:&#xA;&#x9;var i0:real&#xA;&#x9;var i90:real&#xA;&#x9;var i180:real&#xA;&#x9;var im90:real&#xA;&#x9;&#xA;&#x9;var iFrontMin:real&#xA;&#x9;var iFrontMax:real&#xA;&#x9;var iFrontMean:real&#xA;&#x9;&#xA;&#x9;var iRightMin:real&#xA;&#x9;var iRightMax:real&#xA;&#x9;var iRightMean:real&#xA;&#x9;&#xA;&#x9;var iBackMin:real&#xA;&#x9;var iBackMax:real&#xA;&#x9;var iBackMean:real&#xA;&#x9;&#xA;&#x9;var iLeftMin:real&#xA;&#x9;var iLeftMax:real&#xA;&#x9;var iLeftMean:real" name="model">
+  <sgraph:Statechart xmi:id="_H3ZnkBtMEeuKLrIwlRh1BQ" specification="@EventDriven&#xA;@ChildFirstExecution&#xA;&#xA;internal:&#xA;&#x9;event tick&#xA;&#x9;&#xA;&#x9;event automatic_mode&#xA;&#x9;event manual_mode&#xA;&#x9;&#xA;&#x9;event align_rotation&#xA;&#x9;event turn_left&#xA;&#x9;event turn_right&#xA;&#x9;event move_forward&#xA;&#x9;&#xA;&#x9;event turned&#xA;&#x9;event rotation_aligned&#xA;&#x9;event moved_forward&#xA;&#x9;&#xA;&#x9;event logged&#xA;&#xA;&#x9;var baseSpeed:real = 0.05&#xA;&#x9;var baseRotation:real = 0.4&#xA;&#x9;&#xA;&#x9;var limitDegreeLow:real = 0.2&#xA;&#x9;var limitDegreeHigh = 5&#xA;&#x9;&#xA;&#x9;var tmpColumn:integer&#xA;&#x9;var tmpRow:integer&#xA;&#x9;&#xA;&#x9;var previousColumn:integer = 0&#xA;&#x9;var previousRow:integer = 0&#xA;&#x9;&#xA;&#x9;var transitioned:boolean = false&#xA;&#x9;&#xA;&#x9;var updateCellTransition:boolean = false&#xA;&#x9;&#xA;&#x9;var currentX:real&#xA;&#x9;var currentY:real&#xA;&#x9;&#xA;&#x9;var currentCellX:real&#xA;&#x9;var currentCellY:real&#xA;&#x9;&#xA;&#x9;var targetX:real&#xA;&#x9;var targetY:real&#xA;&#x9;var targetOrientation:integer&#xA;&#x9;&#xA;&#x9;var startprocedure:boolean = true&#xA;&#x9;&#xA;&#x9;var target_yaw:real&#xA;&#x9;var aligned:boolean&#xA;&#x9;&#xA;&#x9;var align_yaw:real&#xA;&#x9;var yaw_aligned:boolean&#xA;&#x9;var position_aligned:boolean&#xA;&#x9;&#xA;&#x9;every 100ms / raise tick&#xA;&#xA;interface:&#xA;operation abs(v:real):real&#xA;operation angle_diff(a:real,b:real):real&#xA;&#xA;// Static values&#xA;interface baseValues:&#xA;&#x9;var maxSpeed:real = 0.22&#xA;&#x9;var maxRotation:real = 2.84&#xA;&#x9;&#xA;&#x9;var degreesFront:integer = 10&#xA;&#x9;var degreesRight:integer = 10&#xA;&#x9;var degreesBack:integer = 10&#xA;&#x9;var degreesLeft:integer = 10&#xA;&#x9;&#xA;&#x9;var orientationNorth:integer = 0&#xA;&#x9;var orientationEast:integer = 1&#xA;&#x9;var orientationSouth:integer = 2&#xA;&#x9;var orientationWest:integer = 3&#xA;&#x9;&#xA;&#x9;var northDegree:integer = 90&#xA;&#x9;var eastDegree:integer = 0&#xA;&#x9;var southDegree:integer = -90&#xA;&#x9;var westDegree:integer = 180 // Or -180&#xA;&#x9;&#xA;&#x9;var northOrientationDegreeFrom:integer = 45&#xA;&#x9;var eastOrientationDegreeFrom:integer = -45&#xA;&#x9;var southOrientationDegreeFrom:integer = -135&#xA;&#x9;var westOrientationDegreeFrom1:integer = 135&#xA;&#x9;var westOrientationDegreeFrom2:integer = -180&#xA;&#xA;&#x9;var northOrientationDegreeTo:integer = 135&#xA;&#x9;var eastOrientationDegreeTo:integer = 45&#xA;&#x9;var southOrientationDegreeTo:integer = -45&#xA;&#x9;var westOrientationDegreeTo1:integer = 180&#xA;&#x9;var westOrientationDegreeTo2:integer = -135&#xA;&#xA;&#x9;&#xA;&#xA;////////////////////////////////////////////////&#xA;// These values are output.&#xA;// The code sends these either &#xA;// to the TurtleBot3, or &#xA;// uses it within the code&#xA;interface output:&#xA;&#x9;var speed:real&#xA;&#x9;var rotation:real&#xA;&#x9;&#xA;&#x9;var obstacles:integer = 0&#xA;&#x9;var gems:integer = 0&#xA;&#x9;&#xA;&#x9;var finish:integer = 0&#xA;&#xA;////////////////////////////////////////////////&#xA;// Keeps track of variables &#xA;// in the grid&#xA;interface grid:&#xA;&#x9;var update:boolean = false&#xA;&#x9;var receive:boolean = false&#xA;&#x9;&#xA;&#x9;var column:integer = 0&#xA;&#x9;var row:integer = 0&#xA;&#x9;var orientation:integer&#xA;&#x9;&#xA;&#x9;var visited:boolean // DOES ABSOLUTELY NOTHING -> NOT RETURNED DURING RECEIVE&#xA;&#x9;&#xA;&#x9;var wallFront:integer&#xA;&#x9;var wallRight:integer&#xA;&#x9;var wallBack:integer&#xA;&#x9;var wallLeft:integer&#xA;&#x9;&#xA;&#x9;var gridSize:real = 0.51&#xA;&#x9;var maxCol:integer = 3&#xA;&#x9;var maxRow:integer = 3&#xA;&#xA;////////////////////////////////////////////////&#xA;// Calibration variables&#xA;interface startPos:&#xA;&#x9;var setZero:boolean = false&#xA;&#x9;var zeroX:real&#xA;&#x9;var zeroY:real&#xA;&#x9;var zeroSouthDegree:real&#xA;&#x9;var laserDegOffset:integer&#xA;&#xA;&#xA;////////////////////////////////////////////////&#xA;// Keyboard input in the&#xA;// form of events&#xA;interface computer:&#xA;&#x9;in event m_press&#xA;&#x9;in event w_press&#xA;&#x9;in event a_press&#xA;&#x9;in event s_press&#xA;&#x9;in event d_press&#xA;&#x9;in event x_press&#xA;&#xA;////////////////////////////////////////////////&#xA;// The data from the IMU in&#xA;// Euler angles.&#xA;interface imu:&#xA;&#x9;var pitch:real&#xA;&#x9;var roll:real&#xA;&#x9;var yaw:real // 0 = east, 90 = north 180/-180 = west -90 = south&#xA;&#xA;////////////////////////////////////////////////&#xA;// The data from the odometry in&#xA;// the x, y and z directions.&#xA;interface odom:&#xA;&#x9;var x:real&#xA;&#x9;var y:real&#xA;&#x9;var z:real&#xA;&#xA;////////////////////////////////////////////////&#xA;// Distance data from the &#xA;// LDS&#xA;interface laserDistance:&#xA;&#x9;var d0:real&#xA;&#x9;var d90:real&#xA;&#x9;var d180:real&#xA;&#x9;var dm90:real&#xA;&#x9;&#xA;&#x9;var dMin:real&#xA;&#x9;var minDeg:integer&#xA;&#x9;&#xA;&#x9;var dMax:real&#xA;&#x9;var maxDeg:integer&#xA;&#x9;&#xA;&#x9;var dMean:real&#xA;&#x9;&#xA;&#x9;var dFrontMin:real&#xA;&#x9;var minDegF:integer&#xA;&#x9;var dFrontMax:real&#xA;&#x9;var maxDegF:integer&#xA;&#x9;var dFrontMean:real&#xA;&#x9;&#xA;&#x9;var dRightMin:real&#xA;&#x9;var minDegR:integer&#xA;&#x9;var dRightMax:real&#xA;&#x9;var maxDegR:integer&#xA;&#x9;var dRightMean:real&#xA;&#x9;&#xA;&#x9;var dBackMin:real&#xA;&#x9;var minDegB:integer&#xA;&#x9;var dBackMax:real&#xA;&#x9;var maxDegB:integer&#xA;&#x9;var dBackMean:real&#xA;&#x9;&#xA;&#x9;var dLeftMin:real&#xA;&#x9;var minDegL:integer&#xA;&#x9;var dLeftMax:real&#xA;&#x9;var maxDegL:integer&#xA;&#x9;var dLeftMean:real&#xA;&#xA;////////////////////////////////////////////////&#xA;// Intensity data from the &#xA;// LDS&#xA;interface laserIntensity:&#xA;&#x9;var i0:real&#xA;&#x9;var i90:real&#xA;&#x9;var i180:real&#xA;&#x9;var im90:real&#xA;&#x9;&#xA;&#x9;var iFrontMin:real&#xA;&#x9;var iFrontMax:real&#xA;&#x9;var iFrontMean:real&#xA;&#x9;&#xA;&#x9;var iRightMin:real&#xA;&#x9;var iRightMax:real&#xA;&#x9;var iRightMean:real&#xA;&#x9;&#xA;&#x9;var iBackMin:real&#xA;&#x9;var iBackMax:real&#xA;&#x9;var iBackMean:real&#xA;&#x9;&#xA;&#x9;var iLeftMin:real&#xA;&#x9;var iLeftMax:real&#xA;&#x9;var iLeftMean:real" name="model">
     <regions xmi:id="_H3fuMxtMEeuKLrIwlRh1BQ" name="Manual Control Component">
       <vertices xsi:type="sgraph:Entry" xmi:id="_H3fuNBtMEeuKLrIwlRh1BQ">
         <outgoingTransitions xmi:id="_H3fuNRtMEeuKLrIwlRh1BQ" target="_H3fuNhtMEeuKLrIwlRh1BQ"/>
@@ -83,7 +83,7 @@
       <vertices xsi:type="sgraph:State" xmi:id="_M8OYME_uEeyhHuGFp4b_aQ" specification="" name="Alignment unit" incomingTransitions="_T4SycE_uEeyhHuGFp4b_aQ">
         <outgoingTransitions xmi:id="_TTOeEFTyEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean > grid.gridSize ||&#xA;&#x9;(laserDistance.dFrontMean &lt; (grid.gridSize/2+0.01) &amp;&amp; &#xA;&#x9;&#x9;laserDistance.dFrontMean > (grid.gridSize/2-0.01)&#xA;&#x9;)&#xA;] " target="_wNMvgFTxEeyrP50YGbMAsQ"/>
         <outgoingTransitions xmi:id="_kMln4FTyEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean &lt; (grid.gridSize/2)  ] &#xA;/ &#xA;output.speed = -1*(baseSpeed /2)" target="_eQ8v4FTyEeyrP50YGbMAsQ"/>
-        <outgoingTransitions xmi:id="_JBNw0FT0EeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean > (grid.gridSize/2)  ] &#xA;/ &#xA;output.speed = baseSpeed/2 " target="_eQ8v4FTyEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_JBNw0FT0EeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean > (grid.gridSize/2)  ] &#xA;/ &#xA;output.speed = baseSpeed/2 " target="_MxI3sFZ_EeyGAJSOmNPqbA"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_PnDmyk_uEeyhHuGFp4b_aQ" name="Alignment off" incomingTransitions="_TmPjsE_vEeyhHuGFp4b_aQ _7E4WoFTkEeyrP50YGbMAsQ">
         <outgoingTransitions xmi:id="_T4SycE_uEeyhHuGFp4b_aQ" specification="align_rotation" target="_M8OYME_uEeyhHuGFp4b_aQ"/>
@@ -98,18 +98,21 @@
         <outgoingTransitions xmi:id="_12wr8FTkEeyrP50YGbMAsQ" specification="always" target="_xjijQFTkEeyrP50YGbMAsQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_xjijQFTkEeyrP50YGbMAsQ" name="Wait for alignment" incomingTransitions="_0EtfgFTkEeyrP50YGbMAsQ _12wr8FTkEeyrP50YGbMAsQ _exuCgFYiEeyOA6EyQzIeow _9I4_0FYjEeyOA6EyQzIeow _qkbpUFYnEeyOA6EyQzIeow _w0BecFYvEeyOA6EyQzIeow">
-        <outgoingTransitions xmi:id="_7E4WoFTkEeyrP50YGbMAsQ" specification="[angle_diff(imu.yaw, target_yaw) &lt;= limitDegreeLow || angle_diff(imu.yaw, target_yaw)   &lt;= -1*limitDegreeLow]&#xA;/&#xA;raise turned; raise rotation_aligned" target="_PnDmyk_uEeyhHuGFp4b_aQ"/>
+        <outgoingTransitions xmi:id="_7E4WoFTkEeyrP50YGbMAsQ" specification="[angle_diff(imu.yaw, target_yaw) &lt;= limitDegreeLow]&#xA;/&#xA;raise turned; raise rotation_aligned" target="_PnDmyk_uEeyhHuGFp4b_aQ"/>
         <outgoingTransitions xmi:id="_exuCgFYiEeyOA6EyQzIeow" specification="[abs(output.rotation) == baseRotation &amp;&amp; angle_diff(imu.yaw, target_yaw) &lt;= 20.0] / &#xA;output.rotation = output.rotation / 2" target="_xjijQFTkEeyrP50YGbMAsQ"/>
         <outgoingTransitions xmi:id="_9I4_0FYjEeyOA6EyQzIeow" specification="[abs(output.rotation) == baseRotation/2 &amp;&amp; angle_diff(imu.yaw, target_yaw) &lt;= 5] / &#xA;output.rotation = output.rotation / 2" target="_xjijQFTkEeyrP50YGbMAsQ"/>
         <outgoingTransitions xmi:id="_qkbpUFYnEeyOA6EyQzIeow" specification="[abs(output.rotation) == baseRotation/4 &amp;&amp; angle_diff(imu.yaw, target_yaw) &lt;= 3.0] / &#xA;output.rotation = output.rotation / 2" target="_xjijQFTkEeyrP50YGbMAsQ"/>
         <outgoingTransitions xmi:id="_w0BecFYvEeyOA6EyQzIeow" specification="[abs(output.rotation) == baseRotation/8 &amp;&amp; angle_diff(imu.yaw, target_yaw) &lt;= 1.5&#xA;&#x9;&#xA;] / &#xA;output.rotation = output.rotation / 10" target="_xjijQFTkEeyrP50YGbMAsQ"/>
       </vertices>
-      <vertices xsi:type="sgraph:State" xmi:id="_wNMvgFTxEeyrP50YGbMAsQ" name="Aligned" incomingTransitions="_TTOeEFTyEeyrP50YGbMAsQ _nBJkwFTzEeyrP50YGbMAsQ">
+      <vertices xsi:type="sgraph:State" xmi:id="_wNMvgFTxEeyrP50YGbMAsQ" name="Aligned" incomingTransitions="_TTOeEFTyEeyrP50YGbMAsQ _nBJkwFTzEeyrP50YGbMAsQ _QACcoFZ_EeyGAJSOmNPqbA">
         <outgoingTransitions xmi:id="_mox7UFTjEeyrP50YGbMAsQ" specification="[laserDistance.dLeftMax > grid.gridSize || &#xA;&#x9;laserDistance.dRightMax &lt; grid.gridSize&#xA;]" target="_iVaosFTjEeyrP50YGbMAsQ"/>
         <outgoingTransitions xmi:id="_ASGe4FTkEeyrP50YGbMAsQ" specification="[laserDistance.dLeftMax &lt; grid.gridSize &amp;&amp; &#xA;&#x9;laserDistance.dRightMax > grid.gridSize&#xA;]" target="_kTL88FTjEeyrP50YGbMAsQ"/>
       </vertices>
-      <vertices xsi:type="sgraph:State" xmi:id="_eQ8v4FTyEeyrP50YGbMAsQ" specification="" name="Re-align" incomingTransitions="_kMln4FTyEeyrP50YGbMAsQ _JBNw0FT0EeyrP50YGbMAsQ">
-        <outgoingTransitions xmi:id="_nBJkwFTzEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean &lt;= (grid.gridSize/2+0.01) &amp;&amp; &#xA;&#x9;laserDistance.dFrontMean >= (grid.gridSize/2-0.01)&#xA;] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
+      <vertices xsi:type="sgraph:State" xmi:id="_eQ8v4FTyEeyrP50YGbMAsQ" specification="" name="Re-align back" incomingTransitions="_kMln4FTyEeyrP50YGbMAsQ">
+        <outgoingTransitions xmi:id="_nBJkwFTzEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean >= (grid.gridSize/2-0.01)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
+      </vertices>
+      <vertices xsi:type="sgraph:State" xmi:id="_MxI3sFZ_EeyGAJSOmNPqbA" name="Re-align front" incomingTransitions="_JBNw0FT0EeyrP50YGbMAsQ">
+        <outgoingTransitions xmi:id="_QACcoFZ_EeyGAJSOmNPqbA" specification="[laserDistance.dFrontMean &lt;= (grid.gridSize/2-0.01)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
       </vertices>
     </regions>
     <regions xmi:id="_WVyLEFN8EeyYLfMw8-Q7KA" name="Logging component">
@@ -496,7 +499,7 @@
                   <styles xsi:type="notation:ShapeStyle" xmi:id="_fafMl1YaEeyOA6EyQzIeow" fontName="Verdana" fillColor="15720400" lineColor="12632256"/>
                   <styles xsi:type="notation:FontStyle" xmi:id="_fafMmFYaEeyOA6EyQzIeow"/>
                   <styles xsi:type="notation:BooleanValueStyle" xmi:id="_fafMmVYaEeyOA6EyQzIeow" name="isHorizontal" booleanValue="true"/>
-                  <layoutConstraint xsi:type="notation:Bounds" xmi:id="_fafMmlYaEeyOA6EyQzIeow" x="601" y="122" width="579" height="107"/>
+                  <layoutConstraint xsi:type="notation:Bounds" xmi:id="_fafMmlYaEeyOA6EyQzIeow" x="611" y="128" width="646" height="107"/>
                 </children>
                 <children xmi:id="_fafMm1YaEeyOA6EyQzIeow" type="State" element="_2Cr1QFR6Eey-4-c-D02vYA">
                   <children xsi:type="notation:DecorationNode" xmi:id="_fafMnFYaEeyOA6EyQzIeow" type="StateName">
@@ -550,7 +553,7 @@
           <styles xsi:type="notation:ShapeStyle" xmi:id="_M8NxKU_uEeyhHuGFp4b_aQ" fontName="Verdana" fillColor="15720400" lineColor="12632256"/>
           <styles xsi:type="notation:FontStyle" xmi:id="_M8NxKk_uEeyhHuGFp4b_aQ"/>
           <styles xsi:type="notation:BooleanValueStyle" xmi:id="_M8NxK0_uEeyhHuGFp4b_aQ" name="isHorizontal" booleanValue="true"/>
-          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_M8NxLE_uEeyhHuGFp4b_aQ" x="930" y="277" width="157" height="91"/>
+          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_M8NxLE_uEeyhHuGFp4b_aQ" x="926" y="327" width="157" height="91"/>
         </children>
         <children xmi:id="_PnC_sU_uEeyhHuGFp4b_aQ" type="State" element="_PnDmyk_uEeyhHuGFp4b_aQ">
           <children xsi:type="notation:DecorationNode" xmi:id="_PnC_sk_uEeyhHuGFp4b_aQ" type="StateName">
@@ -566,7 +569,7 @@
           <styles xsi:type="notation:ShapeStyle" xmi:id="_PnDmxk_uEeyhHuGFp4b_aQ" fontName="Verdana" fillColor="15720400" lineColor="12632256"/>
           <styles xsi:type="notation:FontStyle" xmi:id="_PnDmx0_uEeyhHuGFp4b_aQ"/>
           <styles xsi:type="notation:BooleanValueStyle" xmi:id="_PnDmyE_uEeyhHuGFp4b_aQ" name="isHorizontal" booleanValue="true"/>
-          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_PnDmyU_uEeyhHuGFp4b_aQ" x="1215" y="296" width="155" height="53"/>
+          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_PnDmyU_uEeyhHuGFp4b_aQ" x="1211" y="347" width="155" height="53"/>
         </children>
         <children xmi:id="_RSAQME_vEeyhHuGFp4b_aQ" type="Entry" element="_RR_pIE_vEeyhHuGFp4b_aQ">
           <children xmi:id="_RSA3QE_vEeyhHuGFp4b_aQ" type="BorderItemLabelContainer">
@@ -579,7 +582,7 @@
           </children>
           <styles xsi:type="notation:ShapeStyle" xmi:id="_RSAQMU_vEeyhHuGFp4b_aQ" fontName="Verdana" fillColor="0" lineColor="16777215"/>
           <styles xsi:type="notation:NamedStyle" xmi:id="_RSAQMk_vEeyhHuGFp4b_aQ" name="allowColors"/>
-          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_RSAQM0_vEeyhHuGFp4b_aQ" x="1328" y="194" width="15" height="15"/>
+          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_RSAQM0_vEeyhHuGFp4b_aQ" x="1324" y="244" width="15" height="15"/>
         </children>
         <children xmi:id="_iVoEEFTjEeyrP50YGbMAsQ" type="State" element="_iVaosFTjEeyrP50YGbMAsQ">
           <children xsi:type="notation:DecorationNode" xmi:id="_iVorIFTjEeyrP50YGbMAsQ" type="StateName">
@@ -595,7 +598,7 @@
           <styles xsi:type="notation:ShapeStyle" xmi:id="_iVoEEVTjEeyrP50YGbMAsQ" fontName="Verdana" fillColor="15720400" lineColor="12632256"/>
           <styles xsi:type="notation:FontStyle" xmi:id="_iVoEElTjEeyrP50YGbMAsQ"/>
           <styles xsi:type="notation:BooleanValueStyle" xmi:id="_iVpSNFTjEeyrP50YGbMAsQ" name="isHorizontal" booleanValue="true"/>
-          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_iVoEE1TjEeyrP50YGbMAsQ" x="198" y="377" width="520" height="76"/>
+          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_iVoEE1TjEeyrP50YGbMAsQ" x="194" y="427" width="520" height="76"/>
         </children>
         <children xmi:id="_kTNyIFTjEeyrP50YGbMAsQ" type="State" element="_kTL88FTjEeyrP50YGbMAsQ">
           <children xsi:type="notation:DecorationNode" xmi:id="_kTOZMFTjEeyrP50YGbMAsQ" type="StateName">
@@ -611,7 +614,7 @@
           <styles xsi:type="notation:ShapeStyle" xmi:id="_kTNyIVTjEeyrP50YGbMAsQ" fontName="Verdana" fillColor="15720400" lineColor="12632256"/>
           <styles xsi:type="notation:FontStyle" xmi:id="_kTNyIlTjEeyrP50YGbMAsQ"/>
           <styles xsi:type="notation:BooleanValueStyle" xmi:id="_kTPAQVTjEeyrP50YGbMAsQ" name="isHorizontal" booleanValue="true"/>
-          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_kTNyI1TjEeyrP50YGbMAsQ" x="198" y="471" width="524" height="76"/>
+          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_kTNyI1TjEeyrP50YGbMAsQ" x="194" y="521" width="524" height="76"/>
         </children>
         <children xmi:id="_xjkYcFTkEeyrP50YGbMAsQ" type="State" element="_xjijQFTkEeyrP50YGbMAsQ">
           <children xsi:type="notation:DecorationNode" xmi:id="_xjk_gFTkEeyrP50YGbMAsQ" type="StateName">
@@ -627,7 +630,7 @@
           <styles xsi:type="notation:ShapeStyle" xmi:id="_xjkYcVTkEeyrP50YGbMAsQ" fontName="Verdana" fillColor="15720400" lineColor="12632256"/>
           <styles xsi:type="notation:FontStyle" xmi:id="_xjkYclTkEeyrP50YGbMAsQ"/>
           <styles xsi:type="notation:BooleanValueStyle" xmi:id="_xjk_h1TkEeyrP50YGbMAsQ" name="isHorizontal" booleanValue="true"/>
-          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_xjkYc1TkEeyrP50YGbMAsQ" x="1117" y="470" width="141" height="53"/>
+          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_xjkYc1TkEeyrP50YGbMAsQ" x="1113" y="521" width="141" height="53"/>
         </children>
         <children xmi:id="_wNNWkFTxEeyrP50YGbMAsQ" type="State" element="_wNMvgFTxEeyrP50YGbMAsQ">
           <children xsi:type="notation:DecorationNode" xmi:id="_wNNWlFTxEeyrP50YGbMAsQ" type="StateName">
@@ -643,7 +646,7 @@
           <styles xsi:type="notation:ShapeStyle" xmi:id="_wNNWkVTxEeyrP50YGbMAsQ" fontName="Verdana" fillColor="15720400" lineColor="12632256"/>
           <styles xsi:type="notation:FontStyle" xmi:id="_wNNWklTxEeyrP50YGbMAsQ"/>
           <styles xsi:type="notation:BooleanValueStyle" xmi:id="_wNOksFTxEeyrP50YGbMAsQ" name="isHorizontal" booleanValue="true"/>
-          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_wNNWk1TxEeyrP50YGbMAsQ" x="375" y="148" width="201" height="53"/>
+          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_wNNWk1TxEeyrP50YGbMAsQ" x="371" y="198" width="201" height="53"/>
         </children>
         <children xmi:id="_eQ9W8FTyEeyrP50YGbMAsQ" type="State" element="_eQ8v4FTyEeyrP50YGbMAsQ">
           <children xsi:type="notation:DecorationNode" xmi:id="_eQ9-AFTyEeyrP50YGbMAsQ" type="StateName">
@@ -659,12 +662,28 @@
           <styles xsi:type="notation:ShapeStyle" xmi:id="_eQ9W8VTyEeyrP50YGbMAsQ" fontName="Verdana" fillColor="15720400" lineColor="12632256"/>
           <styles xsi:type="notation:FontStyle" xmi:id="_eQ9W8lTyEeyrP50YGbMAsQ"/>
           <styles xsi:type="notation:BooleanValueStyle" xmi:id="_eQ9-B1TyEeyrP50YGbMAsQ" name="isHorizontal" booleanValue="true"/>
-          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_eQ9W81TyEeyrP50YGbMAsQ" x="763" y="32" width="69" height="53"/>
+          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_eQ9W81TyEeyrP50YGbMAsQ" x="759" y="82" width="124" height="53"/>
+        </children>
+        <children xmi:id="_MxJewFZ_EeyGAJSOmNPqbA" type="State" element="_MxI3sFZ_EeyGAJSOmNPqbA">
+          <children xsi:type="notation:DecorationNode" xmi:id="_MxJexFZ_EeyGAJSOmNPqbA" type="StateName">
+            <styles xsi:type="notation:ShapeStyle" xmi:id="_MxJexVZ_EeyGAJSOmNPqbA"/>
+            <layoutConstraint xsi:type="notation:Location" xmi:id="_MxJexlZ_EeyGAJSOmNPqbA"/>
+          </children>
+          <children xsi:type="notation:Compartment" xmi:id="_MxJex1Z_EeyGAJSOmNPqbA" type="StateTextCompartment">
+            <children xsi:type="notation:Shape" xmi:id="_MxJeyFZ_EeyGAJSOmNPqbA" type="StateTextCompartmentExpression" fontName="Verdana" lineColor="4210752">
+              <layoutConstraint xsi:type="notation:Bounds" xmi:id="_MxJeyVZ_EeyGAJSOmNPqbA"/>
+            </children>
+          </children>
+          <children xsi:type="notation:Compartment" xmi:id="_MxKF0FZ_EeyGAJSOmNPqbA" type="StateFigureCompartment"/>
+          <styles xsi:type="notation:ShapeStyle" xmi:id="_MxJewVZ_EeyGAJSOmNPqbA" fontName="Verdana" fillColor="15720400" lineColor="12632256"/>
+          <styles xsi:type="notation:FontStyle" xmi:id="_MxJewlZ_EeyGAJSOmNPqbA"/>
+          <styles xsi:type="notation:BooleanValueStyle" xmi:id="_MxKF0VZ_EeyGAJSOmNPqbA" name="isHorizontal" booleanValue="true"/>
+          <layoutConstraint xsi:type="notation:Bounds" xmi:id="_MxJew1Z_EeyGAJSOmNPqbA" x="767" y="13"/>
         </children>
         <layoutConstraint xsi:type="notation:Bounds" xmi:id="_w0ppgE_tEeyuXvYY0nZO8A"/>
       </children>
       <styles xsi:type="notation:ShapeStyle" xmi:id="_w0obYU_tEeyuXvYY0nZO8A" fontName="Verdana" fillColor="16448250" lineColor="12632256"/>
-      <layoutConstraint xsi:type="notation:Bounds" xmi:id="_w0obYk_tEeyuXvYY0nZO8A" x="3390" y="1015" width="1570" height="800"/>
+      <layoutConstraint xsi:type="notation:Bounds" xmi:id="_w0obYk_tEeyuXvYY0nZO8A" x="3390" y="1015" width="1570" height="812"/>
     </children>
     <children xmi:id="_WVwV4FN8EeyYLfMw8-Q7KA" type="Region" element="_WVyLEFN8EeyYLfMw8-Q7KA">
       <children xsi:type="notation:DecorationNode" xmi:id="_WVwV4VN8EeyYLfMw8-Q7KA" type="RegionName">
@@ -1144,22 +1163,22 @@
     <edges xmi:id="_LeWiEFR6Eey-4-c-D02vYA" type="Transition" element="_LeV7AFR6Eey-4-c-D02vYA" source="_fafMg1YaEeyOA6EyQzIeow" target="_fafMj1YaEeyOA6EyQzIeow">
       <children xsi:type="notation:DecorationNode" xmi:id="_LeWiFFR6Eey-4-c-D02vYA" type="TransitionExpression">
         <styles xsi:type="notation:ShapeStyle" xmi:id="_LeWiFVR6Eey-4-c-D02vYA"/>
-        <layoutConstraint xsi:type="notation:Location" xmi:id="_LeWiFlR6Eey-4-c-D02vYA" x="-2" y="43"/>
+        <layoutConstraint xsi:type="notation:Location" xmi:id="_LeWiFlR6Eey-4-c-D02vYA" x="1" y="43"/>
       </children>
       <styles xsi:type="notation:ConnectorStyle" xmi:id="_LeWiEVR6Eey-4-c-D02vYA" routing="Rectilinear" lineColor="4210752"/>
       <styles xsi:type="notation:FontStyle" xmi:id="_LeWiE1R6Eey-4-c-D02vYA" fontName="Verdana"/>
-      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_LeWiElR6Eey-4-c-D02vYA" points="[-274, -16, -42, 69]$[-274, -62, -42, 23]"/>
+      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_LeWiElR6Eey-4-c-D02vYA" points="[-274, -16, -107, 63]$[-274, -56, -107, 23]"/>
       <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_LeXwMFR6Eey-4-c-D02vYA" id="(1.0,0.3055555555555556)"/>
       <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_LeXwMVR6Eey-4-c-D02vYA" id="(0.8309859154929577,0.7924528301886793)"/>
     </edges>
     <edges xmi:id="_eWCZwFR6Eey-4-c-D02vYA" type="Transition" element="_eWBLoFR6Eey-4-c-D02vYA" source="_fafMj1YaEeyOA6EyQzIeow" target="_fafMa1YaEeyOA6EyQzIeow">
       <children xsi:type="notation:DecorationNode" xmi:id="_eWCZxFR6Eey-4-c-D02vYA" type="TransitionExpression">
         <styles xsi:type="notation:ShapeStyle" xmi:id="_eWCZxVR6Eey-4-c-D02vYA"/>
-        <layoutConstraint xsi:type="notation:Location" xmi:id="_eWCZxlR6Eey-4-c-D02vYA" x="-167" y="75"/>
+        <layoutConstraint xsi:type="notation:Location" xmi:id="_eWCZxlR6Eey-4-c-D02vYA" x="-153" y="75"/>
       </children>
       <styles xsi:type="notation:ConnectorStyle" xmi:id="_eWCZwVR6Eey-4-c-D02vYA" routing="Rectilinear" lineColor="4210752"/>
       <styles xsi:type="notation:FontStyle" xmi:id="_eWCZw1R6Eey-4-c-D02vYA" fontName="Verdana"/>
-      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_eWCZwlR6Eey-4-c-D02vYA" points="[0, -53, 177, -167]$[-175, -53, 2, -167]$[-175, 108, 2, -6]"/>
+      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_eWCZwlR6Eey-4-c-D02vYA" points="[0, -42, 187, -150]$[-185, -42, 2, -150]$[-185, 102, 2, -6]"/>
       <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_eWDn4FR6Eey-4-c-D02vYA" id="(0.0,0.6415094339622641)"/>
       <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_eWDn4VR6Eey-4-c-D02vYA" id="(0.9787798408488063,0.03125)"/>
     </edges>
@@ -1264,18 +1283,18 @@
     <edges xmi:id="_kMmO8FTyEeyrP50YGbMAsQ" type="Transition" element="_kMln4FTyEeyrP50YGbMAsQ" source="_M8NxIU_uEeyhHuGFp4b_aQ" target="_eQ9W8FTyEeyrP50YGbMAsQ">
       <children xsi:type="notation:DecorationNode" xmi:id="_kMm2AFTyEeyrP50YGbMAsQ" type="TransitionExpression">
         <styles xsi:type="notation:ShapeStyle" xmi:id="_kMm2AVTyEeyrP50YGbMAsQ"/>
-        <layoutConstraint xsi:type="notation:Location" xmi:id="_kMm2AlTyEeyrP50YGbMAsQ" x="-38" y="-114"/>
+        <layoutConstraint xsi:type="notation:Location" xmi:id="_kMm2AlTyEeyrP50YGbMAsQ" x="-18" y="-89"/>
       </children>
       <styles xsi:type="notation:ConnectorStyle" xmi:id="_kMmO8VTyEeyrP50YGbMAsQ" routing="Rectilinear" lineColor="4210752"/>
       <styles xsi:type="notation:FontStyle" xmi:id="_kMmO81TyEeyrP50YGbMAsQ" fontName="Verdana"/>
-      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_kMmO8lTyEeyrP50YGbMAsQ" points="[-58, -91, 179, 220]$[-58, -307, 179, 4]$[-233, -307, 4, 4]"/>
+      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_kMmO8lTyEeyrP50YGbMAsQ" points="[-58, -91, 128, 220]$[-58, -307, 128, 4]$[-178, -307, 8, 4]"/>
       <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_kMndEFTyEeyrP50YGbMAsQ" id="(0.8598726114649682,1.0)"/>
       <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_kMndEVTyEeyrP50YGbMAsQ" id="(0.9420289855072463,0.4716981132075472)"/>
     </edges>
     <edges xmi:id="_nBKL0FTzEeyrP50YGbMAsQ" type="Transition" element="_nBJkwFTzEeyrP50YGbMAsQ" source="_eQ9W8FTyEeyrP50YGbMAsQ" target="_wNNWkFTxEeyrP50YGbMAsQ">
       <children xsi:type="notation:DecorationNode" xmi:id="_nBKL1FTzEeyrP50YGbMAsQ" type="TransitionExpression">
         <styles xsi:type="notation:ShapeStyle" xmi:id="_nBKL1VTzEeyrP50YGbMAsQ"/>
-        <layoutConstraint xsi:type="notation:Location" xmi:id="_nBKL1lTzEeyrP50YGbMAsQ" x="91" y="-2"/>
+        <layoutConstraint xsi:type="notation:Location" xmi:id="_nBKL1lTzEeyrP50YGbMAsQ" x="23"/>
       </children>
       <styles xsi:type="notation:ConnectorStyle" xmi:id="_nBKL0VTzEeyrP50YGbMAsQ" routing="Rectilinear" lineColor="4210752"/>
       <styles xsi:type="notation:FontStyle" xmi:id="_nBKL01TzEeyrP50YGbMAsQ" fontName="Verdana"/>
@@ -1283,16 +1302,16 @@
       <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_nBLZ8FTzEeyrP50YGbMAsQ" id="(0.0,0.6037735849056604)"/>
       <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_nBLZ8VTzEeyrP50YGbMAsQ" id="(0.9701492537313433,0.6037735849056604)"/>
     </edges>
-    <edges xmi:id="_JBPmAFT0EeyrP50YGbMAsQ" type="Transition" element="_JBNw0FT0EeyrP50YGbMAsQ" source="_M8NxIU_uEeyhHuGFp4b_aQ" target="_eQ9W8FTyEeyrP50YGbMAsQ">
+    <edges xmi:id="_JBPmAFT0EeyrP50YGbMAsQ" type="Transition" element="_JBNw0FT0EeyrP50YGbMAsQ" source="_M8NxIU_uEeyhHuGFp4b_aQ" target="_MxJewFZ_EeyGAJSOmNPqbA">
       <children xsi:type="notation:DecorationNode" xmi:id="_JBPmBFT0EeyrP50YGbMAsQ" type="TransitionExpression">
         <styles xsi:type="notation:ShapeStyle" xmi:id="_JBPmBVT0EeyrP50YGbMAsQ"/>
-        <layoutConstraint xsi:type="notation:Location" xmi:id="_JBPmBlT0EeyrP50YGbMAsQ" x="-123" y="-58"/>
+        <layoutConstraint xsi:type="notation:Location" xmi:id="_JBPmBlT0EeyrP50YGbMAsQ" x="-51" y="46"/>
       </children>
       <styles xsi:type="notation:ConnectorStyle" xmi:id="_JBPmAVT0EeyrP50YGbMAsQ" routing="Rectilinear" lineColor="4210752"/>
       <styles xsi:type="notation:FontStyle" xmi:id="_JBPmA1T0EeyrP50YGbMAsQ" fontName="Verdana"/>
-      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_JBPmAlT0EeyrP50YGbMAsQ" points="[0, -35, 259, 229]$[110, -35, 369, 229]$[110, -270, 369, -6]$[-255, -270, 4, -6]"/>
+      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_JBPmAlT0EeyrP50YGbMAsQ" points="[0, -30, 211, 287]$[136, -30, 347, 287]$[136, -324, 347, -7]$[-209, -324, 2, -7]"/>
       <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_JBQ0IFT0EeyrP50YGbMAsQ" id="(1.0,0.38461538461538464)"/>
-      <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_JBQ0IVT0EeyrP50YGbMAsQ" id="(0.9420289855072463,0.3018867924528302)"/>
+      <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_JBQ0IVT0EeyrP50YGbMAsQ" id="(0.9859154929577465,0.6037735849056604)"/>
     </edges>
     <edges xmi:id="_exv3sFYiEeyOA6EyQzIeow" type="Transition" element="_exuCgFYiEeyOA6EyQzIeow" source="_xjkYcFTkEeyrP50YGbMAsQ" target="_xjkYcFTkEeyrP50YGbMAsQ">
       <children xsi:type="notation:DecorationNode" xmi:id="_exv3tFYiEeyOA6EyQzIeow" type="TransitionExpression">
@@ -1348,6 +1367,17 @@
       <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_w0CFglYvEeyOA6EyQzIeow" points="[0, -23, 5, 2]$[63, -23, 68, 2]$[63, -10, 68, 15]$[0, -10, 5, 15]"/>
       <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_w0DToFYvEeyOA6EyQzIeow" id="(1.0,0.660377358490566)"/>
       <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_w0DToVYvEeyOA6EyQzIeow" id="(0.9645390070921985,0.18867924528301888)"/>
+    </edges>
+    <edges xmi:id="_QADDsFZ_EeyGAJSOmNPqbA" type="Transition" element="_QACcoFZ_EeyGAJSOmNPqbA" source="_MxJewFZ_EeyGAJSOmNPqbA" target="_wNNWkFTxEeyrP50YGbMAsQ">
+      <children xsi:type="notation:DecorationNode" xmi:id="_QADqwVZ_EeyGAJSOmNPqbA" type="TransitionExpression">
+        <styles xsi:type="notation:ShapeStyle" xmi:id="_QADqwlZ_EeyGAJSOmNPqbA"/>
+        <layoutConstraint xsi:type="notation:Location" xmi:id="_QADqw1Z_EeyGAJSOmNPqbA" x="-33" y="-2"/>
+      </children>
+      <styles xsi:type="notation:ConnectorStyle" xmi:id="_QADDsVZ_EeyGAJSOmNPqbA" routing="Rectilinear" lineColor="4210752"/>
+      <styles xsi:type="notation:FontStyle" xmi:id="_QADqwFZ_EeyGAJSOmNPqbA" fontName="Verdana"/>
+      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_QADDslZ_EeyGAJSOmNPqbA" points="[0, -32, 335, -186]$[-355, -32, -20, -186]$[-355, 143, -20, -11]"/>
+      <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_QAE44FZ_EeyGAJSOmNPqbA" id="(0.0,0.7924528301886793)"/>
+      <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_QAE44VZ_EeyGAJSOmNPqbA" id="(0.3034825870646766,0.20754716981132076)"/>
     </edges>
   </notation:Diagram>
 </xmi:XMI>
