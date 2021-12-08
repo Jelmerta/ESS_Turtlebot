@@ -711,7 +711,12 @@ class Model:
 	def __entry_action_driving_component_diriving_r1_avoid_collision(self):
 		"""Entry action for state 'avoid collision'..
 		"""
-		self.__target_yaw = self.__target_yaw + 180
+		if self.laser_distance.d90 < 0.5 and self.laser_distance.dm90 < 0.5:
+			self.__target_yaw = self.__target_yaw + 180
+		if self.laser_distance.d90 > 0.5:
+			self.__target_yaw = self.__target_yaw + 90
+		if not (self.laser_distance.d90 > 0.5) and self.laser_distance.dm90 > 0.5:
+			self.__target_yaw = self.__target_yaw - 90
 		
 	def __entry_action_logic_component_maze_algorithm_r1_setup(self):
 		"""Entry action for state 'Setup'..
