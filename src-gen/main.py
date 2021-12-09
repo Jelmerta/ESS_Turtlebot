@@ -25,6 +25,8 @@ from grid.Grid import Maze
 
 from timer.sct_timer import Timer
 
+from grid.operations import Callback
+
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Quaternion
@@ -43,6 +45,8 @@ class SCTConnect():
 
         # Initialize the statecharts
         self.sm = Model()
+
+        self.sm.operation_callback = Callback()
 
     """
     Setup the statemachine and the ROS 2 node
