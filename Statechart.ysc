@@ -129,8 +129,8 @@
         <outgoingTransitions xmi:id="_ZpyawFkUEeyzM-gyIv-DQw" specification="tick / rotationChange = angle_diff(imu.yaw, target_yaw) " target="_xjijQFTkEeyrP50YGbMAsQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_wNMvgFTxEeyrP50YGbMAsQ" name="Aligned" incomingTransitions="_TTOeEFTyEeyrP50YGbMAsQ _nBJkwFTzEeyrP50YGbMAsQ _QACcoFZ_EeyGAJSOmNPqbA">
-        <outgoingTransitions xmi:id="_mox7UFTjEeyrP50YGbMAsQ" specification="[laserDistance.dLeftMax > grid.gridSize || &#xA;&#x9;laserDistance.dRightMin &lt; grid.gridSize&#xA;]" target="_iVaosFTjEeyrP50YGbMAsQ"/>
-        <outgoingTransitions xmi:id="_ASGe4FTkEeyrP50YGbMAsQ" specification="[laserDistance.dLeftMin &lt; grid.gridSize &amp;&amp; &#xA;&#x9;laserDistance.dRightMax > grid.gridSize&#xA;]" target="_kTL88FTjEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_mox7UFTjEeyrP50YGbMAsQ" specification="[laserDistance.dLeftMax > grid.gridSize || &#xA;&#x9;laserDistance.dRightMax &lt; grid.gridSize&#xA;]" target="_iVaosFTjEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_ASGe4FTkEeyrP50YGbMAsQ" specification="[laserDistance.dLeftMax &lt; grid.gridSize &amp;&amp; &#xA;&#x9;laserDistance.dRightMax > grid.gridSize&#xA;]" target="_kTL88FTjEeyrP50YGbMAsQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_eQ8v4FTyEeyrP50YGbMAsQ" specification="" name="Re-align back" incomingTransitions="_kMln4FTyEeyrP50YGbMAsQ">
         <outgoingTransitions xmi:id="_nBJkwFTzEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean >= (grid.gridSize/2-0.01)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
@@ -994,7 +994,7 @@
     <edges xmi:id="_FX6fsE4hEeyW8L9SCsxrNw" type="Transition" element="_FX5RkE4hEeyW8L9SCsxrNw" source="_FX21UE4hEeyW8L9SCsxrNw" target="_r2QK8E_vEeyhHuGFp4b_aQ">
       <children xsi:type="notation:DecorationNode" xmi:id="_FX6fsU4hEeyW8L9SCsxrNw" type="TransitionExpression">
         <styles xsi:type="notation:ShapeStyle" xmi:id="_FX6fsk4hEeyW8L9SCsxrNw"/>
-        <layoutConstraint xsi:type="notation:Location" xmi:id="_FX6fs04hEeyW8L9SCsxrNw" x="-550" y="96"/>
+        <layoutConstraint xsi:type="notation:Location" xmi:id="_FX6fs04hEeyW8L9SCsxrNw" x="-220" y="18"/>
       </children>
       <styles xsi:type="notation:ConnectorStyle" xmi:id="_FX6ftE4hEeyW8L9SCsxrNw" routing="Rectilinear" lineColor="4210752"/>
       <styles xsi:type="notation:FontStyle" xmi:id="_FX6ftU4hEeyW8L9SCsxrNw" fontName="Verdana"/>
