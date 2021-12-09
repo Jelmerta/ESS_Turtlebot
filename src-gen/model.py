@@ -26,7 +26,6 @@ class Model:
 			driving_component_diriving_r1rotate_left,
 			driving_component_diriving_r1move_forward,
 			driving_component_diriving_r1adjust_course,
-			driving_component_diriving_r1avoid_collision,
 			driving_component_manual,
 			logic_component_manual,
 			logic_component_maze_algorithm,
@@ -37,7 +36,7 @@ class Model:
 			alignment_alignment_unit,
 			alignment_alignment_off,
 			null_state
-		) = range(23)
+		) = range(22)
 	
 	
 	class BaseValues:
@@ -452,7 +451,7 @@ class Model:
 			return self.__state_vector[1] == self.__State.logging_unit_check_current_walls
 		if s == self.__State.driving_component_diriving:
 			return (self.__state_vector[2] >= self.__State.driving_component_diriving)\
-				and (self.__state_vector[2] <= self.__State.driving_component_diriving_r1avoid_collision)
+				and (self.__state_vector[2] <= self.__State.driving_component_diriving_r1adjust_course)
 		if s == self.__State.driving_component_diriving_r1align:
 			return self.__state_vector[2] == self.__State.driving_component_diriving_r1align
 		if s == self.__State.driving_component_diriving_r1iteration:
@@ -463,8 +462,6 @@ class Model:
 			return self.__state_vector[2] == self.__State.driving_component_diriving_r1move_forward
 		if s == self.__State.driving_component_diriving_r1adjust_course:
 			return self.__state_vector[2] == self.__State.driving_component_diriving_r1adjust_course
-		if s == self.__State.driving_component_diriving_r1avoid_collision:
-			return self.__state_vector[2] == self.__State.driving_component_diriving_r1avoid_collision
 		if s == self.__State.driving_component_manual:
 			return self.__state_vector[2] == self.__State.driving_component_manual
 		if s == self.__State.logic_component_manual:
@@ -627,7 +624,7 @@ class Model:
 	def __effect_driving_component_diriving_r1__choice_0_tr0(self):
 		""".
 		"""
-		self.__enter_sequence_driving_component_diriving_r1_avoid_collision_default()
+		self.__enter_sequence_driving_component_diriving_r1_rotate_left_default()
 		
 	def __effect_driving_component_diriving_r1__choice_0_tr1(self):
 		""".
@@ -707,16 +704,6 @@ class Model:
 			self.__target_yaw = 180
 		if self.imu.yaw >= -45 and self.imu.yaw <= -135:
 			self.__target_yaw = -90
-		
-	def __entry_action_driving_component_diriving_r1_avoid_collision(self):
-		"""Entry action for state 'avoid collision'..
-		"""
-		if self.laser_distance.d90 < 0.5 and self.laser_distance.dm90 < 0.5:
-			self.__target_yaw = self.__target_yaw + 180
-		if self.laser_distance.d90 > 0.5:
-			self.__target_yaw = self.__target_yaw + 90
-		if not (self.laser_distance.d90 > 0.5) and self.laser_distance.dm90 > 0.5:
-			self.__target_yaw = self.__target_yaw - 90
 		
 	def __entry_action_logic_component_maze_algorithm_r1_setup(self):
 		"""Entry action for state 'Setup'..
@@ -877,14 +864,6 @@ class Model:
 		"""
 		self.__entry_action_driving_component_diriving_r1_adjust_course()
 		self.__state_vector[2] = self.State.driving_component_diriving_r1adjust_course
-		self.__state_conf_vector_position = 2
-		self.__state_conf_vector_changed = True
-		
-	def __enter_sequence_driving_component_diriving_r1_avoid_collision_default(self):
-		"""'default' enter sequence for state avoid collision.
-		"""
-		self.__entry_action_driving_component_diriving_r1_avoid_collision()
-		self.__state_vector[2] = self.State.driving_component_diriving_r1avoid_collision
 		self.__state_conf_vector_position = 2
 		self.__state_conf_vector_changed = True
 		
@@ -1063,12 +1042,6 @@ class Model:
 		self.__state_vector[2] = self.State.null_state
 		self.__state_conf_vector_position = 2
 		
-	def __exit_sequence_driving_component_diriving_r1_avoid_collision(self):
-		"""Default exit sequence for state avoid collision.
-		"""
-		self.__state_vector[2] = self.State.null_state
-		self.__state_conf_vector_position = 2
-		
 	def __exit_sequence_driving_component_manual(self):
 		"""Default exit sequence for state Manual.
 		"""
@@ -1159,8 +1132,6 @@ class Model:
 			self.__exit_sequence_driving_component_diriving_r1_move_forward()
 		elif state == self.State.driving_component_diriving_r1adjust_course:
 			self.__exit_sequence_driving_component_diriving_r1_adjust_course()
-		elif state == self.State.driving_component_diriving_r1avoid_collision:
-			self.__exit_sequence_driving_component_diriving_r1_avoid_collision()
 		elif state == self.State.driving_component_manual:
 			self.__exit_sequence_driving_component_manual()
 		
@@ -1178,8 +1149,6 @@ class Model:
 			self.__exit_sequence_driving_component_diriving_r1_move_forward()
 		elif state == self.State.driving_component_diriving_r1adjust_course:
 			self.__exit_sequence_driving_component_diriving_r1_adjust_course()
-		elif state == self.State.driving_component_diriving_r1avoid_collision:
-			self.__exit_sequence_driving_component_diriving_r1_avoid_collision()
 		
 	def __exit_sequence_logic_component(self):
 		"""Default exit sequence for region Logic Component.
@@ -1422,8 +1391,7 @@ class Model:
 		if transitioned_after < 2:
 			if self.turned:
 				self.__exit_sequence_driving_component_diriving_r1_rotate_left()
-				self.__enter_sequence_driving_component_diriving_r1_iteration_default()
-				self.__driving_component_diriving_react(2)
+				self.__react_driving_component_diriving_r1__choice_0()
 				transitioned_after = 2
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
@@ -1454,21 +1422,6 @@ class Model:
 		if transitioned_after < 2:
 			self.__exit_sequence_driving_component_diriving_r1_adjust_course()
 			self.__react_driving_component_diriving_r1__choice_0()
-			transitioned_after = 2
-		#If no transition was taken then execute local reactions
-		if transitioned_after == transitioned_before:
-			transitioned_after = self.__driving_component_diriving_react(transitioned_before)
-		return transitioned_after
-	
-	
-	def __driving_component_diriving_r1_avoid_collision_react(self, transitioned_before):
-		"""Implementation of __driving_component_diriving_r1_avoid_collision_react function.
-		"""
-		transitioned_after = transitioned_before
-		if transitioned_after < 2:
-			self.__exit_sequence_driving_component_diriving_r1_avoid_collision()
-			self.__enter_sequence_driving_component_diriving_r1_move_forward_default()
-			self.__driving_component_diriving_react(2)
 			transitioned_after = 2
 		#If no transition was taken then execute local reactions
 		if transitioned_after == transitioned_before:
@@ -1671,8 +1624,6 @@ class Model:
 				transitioned = self.__driving_component_diriving_r1_move_forward_react(transitioned)
 			elif state == self.State.driving_component_diriving_r1adjust_course:
 				transitioned = self.__driving_component_diriving_r1_adjust_course_react(transitioned)
-			elif state == self.State.driving_component_diriving_r1avoid_collision:
-				transitioned = self.__driving_component_diriving_r1_avoid_collision_react(transitioned)
 			elif state == self.State.driving_component_manual:
 				transitioned = self.__driving_component_manual_react(transitioned)
 		if self.__state_conf_vector_position < 3:
