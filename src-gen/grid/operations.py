@@ -8,7 +8,7 @@ class Callback:
         return abs(val)
 
     def angle_diff(self, a, b):
-        d = abs(a - b) % 360; 
+        d = abs(a - b) % 360
         if d > 180:
             return 360 - d
         return d
