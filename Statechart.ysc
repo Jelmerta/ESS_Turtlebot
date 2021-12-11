@@ -130,10 +130,10 @@
         <outgoingTransitions xmi:id="_ASGe4FTkEeyrP50YGbMAsQ" specification="//TODO: maybe change to leftmin&#xA;[laserDistance.dLeftMax &lt; grid.gridSize &#xA;&#x9;//laserDistance.dRightMax > grid.gridSize&#xA;]" target="_kTL88FTjEeyrP50YGbMAsQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_eQ8v4FTyEeyrP50YGbMAsQ" specification="" name="Re-align back" incomingTransitions="_kMln4FTyEeyrP50YGbMAsQ">
-        <outgoingTransitions xmi:id="_nBJkwFTzEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean > (grid.gridSize/2+0.05)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_nBJkwFTzEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean > (grid.gridSize/2)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_MxI3sFZ_EeyGAJSOmNPqbA" name="Re-align front" incomingTransitions="_JBNw0FT0EeyrP50YGbMAsQ">
-        <outgoingTransitions xmi:id="_QACcoFZ_EeyGAJSOmNPqbA" specification="[laserDistance.dFrontMean &lt;= (grid.gridSize/2+0.05)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_QACcoFZ_EeyGAJSOmNPqbA" specification="[laserDistance.dFrontMean &lt;= (grid.gridSize/2)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
       </vertices>
     </regions>
     <regions xmi:id="_WVyLEFN8EeyYLfMw8-Q7KA" name="Logging component">
