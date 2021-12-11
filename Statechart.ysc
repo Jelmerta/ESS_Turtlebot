@@ -34,17 +34,17 @@
             <outgoingTransitions xmi:id="_YlJwIFayEeyGAJSOmNPqbA" specification="moved_forward " target="_hIJeYE9_Eey0Nv0St6ckkA"/>
             <outgoingTransitions xmi:id="_AIXekFgaEeyfLo1HrLilTw" specification="switch_wall_detection /  output.speed = baseSpeed" target="_2di_EFgZEeyfLo1HrLilTw"/>
             <regions xmi:id="_Oa8l8FayEeyGAJSOmNPqbA" name="r2">
-              <vertices xsi:type="sgraph:State" xmi:id="_Oa9NFFayEeyGAJSOmNPqbA" specification="// TODO: Use degree somehow to precisely correct this" name="Moving" incomingTransitions="_Oa8l_FayEeyGAJSOmNPqbA _OJQRoFa1EeyGAJSOmNPqbA">
-                <outgoingTransitions xmi:id="_kRYGsFayEeyGAJSOmNPqbA" specification="//[laserDistance.dLeftMin &lt; 0.15] / output.speed = -output.speed" target="_isyugFayEeyGAJSOmNPqbA"/>
+              <vertices xsi:type="sgraph:State" xmi:id="_Oa9NFFayEeyGAJSOmNPqbA" specification="// TODO: Use degree somehow to precisely correct this" name="Moving" incomingTransitions="_Oa8l_FayEeyGAJSOmNPqbA _OJQRoFa1EeyGAJSOmNPqbA _bb3cEFp3EeyfiN7U-41AFw">
+                <outgoingTransitions xmi:id="_kRYGsFayEeyGAJSOmNPqbA" specification="[laserDistance.dLeftMin &lt;= 0.15 &amp;&amp; &#xA;&#x9;abs(laserDistance.dLeftMin - laserDistance.dLeftMax) &lt; 0.15&#xA;] &#xA;/ output.speed = 0.0; output.rotation = -0.05" target="_isyugFayEeyGAJSOmNPqbA"/>
                 <outgoingTransitions xmi:id="_y90wMFa2EeyGAJSOmNPqbA" specification="//[laserDistance.dRightMin &lt; 0.15] / &#xA;//output.speed = -output.speed" target="_o6LhAFa2EeyGAJSOmNPqbA"/>
               </vertices>
               <vertices xsi:type="sgraph:Entry" xmi:id="_Oa8l-1ayEeyGAJSOmNPqbA">
                 <outgoingTransitions xmi:id="_Oa8l_FayEeyGAJSOmNPqbA" specification="" target="_Oa9NFFayEeyGAJSOmNPqbA"/>
               </vertices>
               <vertices xsi:type="sgraph:State" xmi:id="_isyugFayEeyGAJSOmNPqbA" name="Wall left" incomingTransitions="_kRYGsFayEeyGAJSOmNPqbA">
-                <outgoingTransitions xmi:id="_q3BlAFayEeyGAJSOmNPqbA" specification="after 1s /  output.rotation = -0.05" target="_HZX5QFa1EeyGAJSOmNPqbA"/>
+                <outgoingTransitions xmi:id="_bb3cEFp3EeyfiN7U-41AFw" specification="[abs(laserDistance.dLeftMin - laserDistance.dLeftMax) >= 0.15]" target="_Oa9NFFayEeyGAJSOmNPqbA"/>
               </vertices>
-              <vertices xsi:type="sgraph:State" xmi:id="_HZX5QFa1EeyGAJSOmNPqbA" specification="entry / output.speed = 0.0 " name="Walked back" incomingTransitions="_q3BlAFayEeyGAJSOmNPqbA _1QGU0Fa2EeyGAJSOmNPqbA">
+              <vertices xsi:type="sgraph:State" xmi:id="_HZX5QFa1EeyGAJSOmNPqbA" specification="entry / output.speed = 0.0 " name="Walked back" incomingTransitions="_1QGU0Fa2EeyGAJSOmNPqbA">
                 <outgoingTransitions xmi:id="_OJQRoFa1EeyGAJSOmNPqbA" specification="after 1s / &#xA;output.rotation = 0.0; &#xA;output.speed = baseSpeed" target="_Oa9NFFayEeyGAJSOmNPqbA"/>
               </vertices>
               <vertices xsi:type="sgraph:State" xmi:id="_o6LhAFa2EeyGAJSOmNPqbA" name="Wall right" incomingTransitions="_y90wMFa2EeyGAJSOmNPqbA">
@@ -84,26 +84,26 @@
             <outgoingTransitions xmi:id="_ZzERiFnjEey1C5t2E5sVOw" specification="always" target="_ZzAAHVnjEey1C5t2E5sVOw"/>
           </vertices>
           <vertices xsi:type="sgraph:State" xmi:id="_ZzAAHVnjEey1C5t2E5sVOw" specification="entry / raise align_rotation" name="Realign" incomingTransitions="_ZzERiFnjEey1C5t2E5sVOw">
-            <outgoingTransitions xmi:id="_ZzAnO1njEey1C5t2E5sVOw" specification="// After rotation check if there is no wall left and in front. &#xA;// Then at least one cell needs to be walked&#xA;rotation_aligned [laserDistance.dFrontMax > grid.gridSize &#xA;&#x9;&amp;&amp; laserDistance.dLeftMax >  grid.gridSize&#xA;] / &#xA;raise move_forward; raise switch_wall_detection" target="_ZyykvFnjEey1C5t2E5sVOw"/>
-            <outgoingTransitions xmi:id="_ZzAANVnjEey1C5t2E5sVOw" specification="rotation_aligned [laserDistance.dFrontMax > grid.gridSize &amp;&amp; &#xA;&#x9;laserDistance.dLeftMax &lt;  grid.gridSize&#xA;] / &#xA;raise move_forward" target="_Zy-yBVnjEey1C5t2E5sVOw"/>
+            <outgoingTransitions xmi:id="_ZzAnO1njEey1C5t2E5sVOw" specification="// After rotation check if there is no wall left and in front. &#xA;// Then at least one cell needs to be walked&#xA;rotation_aligned [laserDistance.d0 > grid.gridSize &#xA;&#x9;&amp;&amp; laserDistance.d90 >  grid.gridSize&#xA;] / &#xA;raise move_forward; raise switch_wall_detection" target="_ZyykvFnjEey1C5t2E5sVOw"/>
+            <outgoingTransitions xmi:id="_ZzAANVnjEey1C5t2E5sVOw" specification="rotation_aligned [laserDistance.d0 > grid.gridSize &amp;&amp; &#xA;&#x9;laserDistance.dLeftMax &lt;  grid.gridSize&#xA;] / &#xA;raise move_forward" target="_Zy-yBVnjEey1C5t2E5sVOw"/>
             <outgoingTransitions xmi:id="_ZzB1QFnjEey1C5t2E5sVOw" specification="rotation_aligned " target="_ZzDDq1njEey1C5t2E5sVOw"/>
           </vertices>
           <vertices xsi:type="sgraph:State" xmi:id="_Zy-yBVnjEey1C5t2E5sVOw" specification="" name="Move forward" incomingTransitions="_Zy9j7FnjEey1C5t2E5sVOw _ZzAANVnjEey1C5t2E5sVOw">
-            <outgoingTransitions xmi:id="_ZzDDYFnjEey1C5t2E5sVOw" specification="// Wall detected in front.&#xA;[laserDistance.dFrontMax &lt; grid.gridSize/2] &#xA;/ raise moved_forward" target="_ZzDDq1njEey1C5t2E5sVOw"/>
-            <outgoingTransitions xmi:id="_qdiqwFnjEey1C5t2E5sVOw" specification="[laserDistance.dLeftMin > grid.gridSize - 0.05 || laserDistance.dFrontMax &lt; grid.gridSize/2-0.01] / raise moved_forward" target="_ZzDDq1njEey1C5t2E5sVOw"/>
+            <outgoingTransitions xmi:id="_ZzDDYFnjEey1C5t2E5sVOw" specification="// Wall detected in front.&#xA;[laserDistance.d0 &lt; grid.gridSize/2] &#xA;/ raise moved_forward" target="_ZzDDq1njEey1C5t2E5sVOw"/>
+            <outgoingTransitions xmi:id="_qdiqwFnjEey1C5t2E5sVOw" specification="[laserDistance.dLeftMin > grid.gridSize - 0.05 || laserDistance.d0 &lt; grid.gridSize/2-0.01] / raise moved_forward" target="_ZzDDq1njEey1C5t2E5sVOw"/>
           </vertices>
           <vertices xsi:type="sgraph:State" xmi:id="_ZyykvFnjEey1C5t2E5sVOw" specification="" name="Min one cell" incomingTransitions="_ZzAnO1njEey1C5t2E5sVOw">
             <outgoingTransitions xmi:id="_Zy9j7FnjEey1C5t2E5sVOw" specification="[laserDistance.d90 &lt; grid.gridSize*0.75]&#xA;/ raise switch_wall_detection" target="_Zy-yBVnjEey1C5t2E5sVOw"/>
-            <outgoingTransitions xmi:id="_ZzBOS1njEey1C5t2E5sVOw" specification="// When moving one cell, also check if there is no wall&#xA;[laserDistance.dFrontMax &lt; grid.gridSize/2-0.01] / raise switch_wall_detection; raise moved_forward" target="_ZzDDq1njEey1C5t2E5sVOw"/>
+            <outgoingTransitions xmi:id="_ZzBOS1njEey1C5t2E5sVOw" specification="// When moving one cell, also check if there is no wall&#xA;[laserDistance.d0 &lt; grid.gridSize/2-0.01] / raise switch_wall_detection; raise moved_forward" target="_ZzDDq1njEey1C5t2E5sVOw"/>
           </vertices>
         </regions>
       </vertices>
     </regions>
     <regions xmi:id="_w0kxAE_tEeyuXvYY0nZO8A" name="Alignment">
       <vertices xsi:type="sgraph:State" xmi:id="_M8OYME_uEeyhHuGFp4b_aQ" specification="" name="Alignment unit" incomingTransitions="_T4SycE_uEeyhHuGFp4b_aQ">
-        <outgoingTransitions xmi:id="_TTOeEFTyEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean > grid.gridSize ||&#xA;&#x9;(laserDistance.dFrontMean &lt; (grid.gridSize/2+0.01) &amp;&amp; &#xA;&#x9;&#x9;laserDistance.dFrontMean > (grid.gridSize/2-0.01)&#xA;&#x9;)&#xA;] " target="_wNMvgFTxEeyrP50YGbMAsQ"/>
-        <outgoingTransitions xmi:id="_kMln4FTyEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean &lt; (grid.gridSize/2)  ] &#xA;/ &#xA;output.speed = -1*(baseSpeed /2)" target="_eQ8v4FTyEeyrP50YGbMAsQ"/>
-        <outgoingTransitions xmi:id="_JBNw0FT0EeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean > (grid.gridSize/2)  ] &#xA;/ &#xA;output.speed = baseSpeed/2 " target="_MxI3sFZ_EeyGAJSOmNPqbA"/>
+        <outgoingTransitions xmi:id="_TTOeEFTyEeyrP50YGbMAsQ" specification="[laserDistance.d0 > grid.gridSize ||&#xA;&#x9;(laserDistance.d0 &lt; (grid.gridSize/2+0.01) &amp;&amp; &#xA;&#x9;&#x9;laserDistance.d0 > (grid.gridSize/2-0.01)&#xA;&#x9;)&#xA;] " target="_wNMvgFTxEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_kMln4FTyEeyrP50YGbMAsQ" specification="[laserDistance.d0 &lt; (grid.gridSize/2)  ] &#xA;/ &#xA;output.speed = -1*(baseSpeed /2)" target="_eQ8v4FTyEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_JBNw0FT0EeyrP50YGbMAsQ" specification="[laserDistance.d0 > (grid.gridSize/2)  ] &#xA;/ &#xA;output.speed = baseSpeed/2 " target="_MxI3sFZ_EeyGAJSOmNPqbA"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_PnDmyk_uEeyhHuGFp4b_aQ" name="Alignment off" incomingTransitions="_TmPjsE_vEeyhHuGFp4b_aQ _7E4WoFTkEeyrP50YGbMAsQ">
         <outgoingTransitions xmi:id="_T4SycE_uEeyhHuGFp4b_aQ" specification="align_rotation" target="_M8OYME_uEeyhHuGFp4b_aQ"/>
@@ -130,10 +130,10 @@
         <outgoingTransitions xmi:id="_ASGe4FTkEeyrP50YGbMAsQ" specification="[laserDistance.d90 &lt; grid.gridSize ]" target="_kTL88FTjEeyrP50YGbMAsQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_eQ8v4FTyEeyrP50YGbMAsQ" specification="" name="Re-align back" incomingTransitions="_kMln4FTyEeyrP50YGbMAsQ">
-        <outgoingTransitions xmi:id="_nBJkwFTzEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean > (grid.gridSize/2)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_nBJkwFTzEeyrP50YGbMAsQ" specification="[laserDistance.d0 > (grid.gridSize/2)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_MxI3sFZ_EeyGAJSOmNPqbA" name="Re-align front" incomingTransitions="_JBNw0FT0EeyrP50YGbMAsQ">
-        <outgoingTransitions xmi:id="_QACcoFZ_EeyGAJSOmNPqbA" specification="[laserDistance.dFrontMean &lt;= (grid.gridSize/2)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_QACcoFZ_EeyGAJSOmNPqbA" specification="[laserDistance.d0 &lt;= (grid.gridSize/2)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
       </vertices>
     </regions>
     <regions xmi:id="_WVyLEFN8EeyYLfMw8-Q7KA" name="Logging component">
@@ -1491,24 +1491,13 @@
     <edges xmi:id="_kRYtwFayEeyGAJSOmNPqbA" type="Transition" element="_kRYGsFayEeyGAJSOmNPqbA" source="_Oa9NAFayEeyGAJSOmNPqbA" target="_isz8olayEeyGAJSOmNPqbA">
       <children xsi:type="notation:DecorationNode" xmi:id="_kRYtxFayEeyGAJSOmNPqbA" type="TransitionExpression">
         <styles xsi:type="notation:ShapeStyle" xmi:id="_kRYtxVayEeyGAJSOmNPqbA"/>
-        <layoutConstraint xsi:type="notation:Location" xmi:id="_kRYtxlayEeyGAJSOmNPqbA" x="-41" y="-106"/>
+        <layoutConstraint xsi:type="notation:Location" xmi:id="_kRYtxlayEeyGAJSOmNPqbA" x="-70" y="-125"/>
       </children>
       <styles xsi:type="notation:ConnectorStyle" xmi:id="_kRYtwVayEeyGAJSOmNPqbA" routing="Rectilinear" lineColor="4210752"/>
       <styles xsi:type="notation:FontStyle" xmi:id="_kRYtw1ayEeyGAJSOmNPqbA" fontName="Verdana"/>
       <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_kRYtwlayEeyGAJSOmNPqbA" points="[0, 0, -104, -36]$[105, 29, 1, -7]"/>
       <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_kRZ74FayEeyGAJSOmNPqbA" id="(1.0,0.7052631578947368)"/>
       <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_kRZ74VayEeyGAJSOmNPqbA" id="(0.014084507042253521,0.16981132075471697)"/>
-    </edges>
-    <edges xmi:id="_q3CMEFayEeyGAJSOmNPqbA" type="Transition" element="_q3BlAFayEeyGAJSOmNPqbA" source="_isz8olayEeyGAJSOmNPqbA" target="_HZZHYVa1EeyGAJSOmNPqbA">
-      <children xsi:type="notation:DecorationNode" xmi:id="_q3CMFFayEeyGAJSOmNPqbA" type="TransitionExpression">
-        <styles xsi:type="notation:ShapeStyle" xmi:id="_q3CMFVayEeyGAJSOmNPqbA"/>
-        <layoutConstraint xsi:type="notation:Location" xmi:id="_q3CMFlayEeyGAJSOmNPqbA" x="48" y="-162"/>
-      </children>
-      <styles xsi:type="notation:ConnectorStyle" xmi:id="_q3CMEVayEeyGAJSOmNPqbA" routing="Rectilinear" lineColor="4210752"/>
-      <styles xsi:type="notation:FontStyle" xmi:id="_q3CME1ayEeyGAJSOmNPqbA" fontName="Verdana"/>
-      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_q3CMElayEeyGAJSOmNPqbA" points="[0, 0, -39, -122]$[-81, 0, -120, -122]$[-81, 111, -120, -11]"/>
-      <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_q3DaMFayEeyGAJSOmNPqbA" id="(0.0,0.6415094339622641)"/>
-      <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_q3DaMVayEeyGAJSOmNPqbA" id="(0.9577464788732394,0.20754716981132076)"/>
     </edges>
     <edges xmi:id="_OJSG0Fa1EeyGAJSOmNPqbA" type="Transition" element="_OJQRoFa1EeyGAJSOmNPqbA" source="_HZZHYVa1EeyGAJSOmNPqbA" target="_Oa9NAFayEeyGAJSOmNPqbA">
       <children xsi:type="notation:DecorationNode" xmi:id="_OJSG1Fa1EeyGAJSOmNPqbA" type="TransitionExpression">
@@ -1586,6 +1575,17 @@
       <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_qdjR0lnjEey1C5t2E5sVOw" points="[134, 0, 796, -243]$[134, -164, 796, -407]$[-629, -164, 33, -407]$[-629, 232, 33, -11]"/>
       <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_qdkf8FnjEey1C5t2E5sVOw" id="(0.17632850241545894,0.0)"/>
       <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_qdkf8VnjEey1C5t2E5sVOw" id="(0.7851458885941645,0.09016393442622951)"/>
+    </edges>
+    <edges xmi:id="_bb5RQFp3EeyfiN7U-41AFw" type="Transition" element="_bb3cEFp3EeyfiN7U-41AFw" source="_isz8olayEeyGAJSOmNPqbA" target="_Oa9NAFayEeyGAJSOmNPqbA">
+      <children xsi:type="notation:DecorationNode" xmi:id="_bb54UVp3EeyfiN7U-41AFw" type="TransitionExpression">
+        <styles xsi:type="notation:ShapeStyle" xmi:id="_bb54Ulp3EeyfiN7U-41AFw"/>
+        <layoutConstraint xsi:type="notation:Location" xmi:id="_bb6fYFp3EeyfiN7U-41AFw" x="-155" y="-22"/>
+      </children>
+      <styles xsi:type="notation:ConnectorStyle" xmi:id="_bb5RQVp3EeyfiN7U-41AFw" routing="Rectilinear" lineColor="4210752"/>
+      <styles xsi:type="notation:FontStyle" xmi:id="_bb54UFp3EeyfiN7U-41AFw" fontName="Verdana"/>
+      <bendpoints xsi:type="notation:RelativeBendpoints" xmi:id="_bb5RQlp3EeyfiN7U-41AFw" points="[0, 0, 119, 45]$[-118, -38, 1, 7]"/>
+      <sourceAnchor xsi:type="notation:IdentityAnchor" xmi:id="_bb87oFp3EeyfiN7U-41AFw" id="(0.0,0.8679245283018868)"/>
+      <targetAnchor xsi:type="notation:IdentityAnchor" xmi:id="_bb87oVp3EeyfiN7U-41AFw" id="(0.8662207357859532,0.8947368421052632)"/>
     </edges>
   </notation:Diagram>
 </xmi:XMI>
