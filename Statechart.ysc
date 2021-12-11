@@ -112,12 +112,12 @@
         <outgoingTransitions xmi:id="_TmPjsE_vEeyhHuGFp4b_aQ" specification="" target="_PnDmyk_uEeyhHuGFp4b_aQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_iVaosFTjEeyrP50YGbMAsQ" specification="entry [imu.yaw + 90 > 180] / target_yaw = -180 + imu.yaw - 90; raise turn_left&#xA;entry [imu.yaw + 90 &lt; 180] / target_yaw = imu.yaw + 90; raise turn_left" name="Left" incomingTransitions="_mox7UFTjEeyrP50YGbMAsQ">
-        <outgoingTransitions xmi:id="_0EtfgFTkEeyrP50YGbMAsQ" specification="always" target="_xjijQFTkEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_0EtfgFTkEeyrP50YGbMAsQ" specification="always /  rotationChange = 91.0" target="_xjijQFTkEeyrP50YGbMAsQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_kTL88FTjEeyrP50YGbMAsQ" specification="entry [imu.yaw - 90 &lt; -180] / target_yaw = 180 + imu.yaw + 90; raise turn_right&#xA;entry [imu.yaw - 90 > -180] / target_yaw = imu.yaw - 90; raise turn_right" name="Right" incomingTransitions="_ASGe4FTkEeyrP50YGbMAsQ">
-        <outgoingTransitions xmi:id="_12wr8FTkEeyrP50YGbMAsQ" specification="always" target="_xjijQFTkEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_12wr8FTkEeyrP50YGbMAsQ" specification="always / rotationChange = 91.0" target="_xjijQFTkEeyrP50YGbMAsQ"/>
       </vertices>
-      <vertices xsi:type="sgraph:State" xmi:id="_xjijQFTkEeyrP50YGbMAsQ" specification="entry / rotationChange = angle_diff(imu.yaw, target_yaw) " name="Wait for alignment" incomingTransitions="_0EtfgFTkEeyrP50YGbMAsQ _12wr8FTkEeyrP50YGbMAsQ _exuCgFYiEeyOA6EyQzIeow _9I4_0FYjEeyOA6EyQzIeow _qkbpUFYnEeyOA6EyQzIeow _w0BecFYvEeyOA6EyQzIeow _ZpyawFkUEeyzM-gyIv-DQw">
+      <vertices xsi:type="sgraph:State" xmi:id="_xjijQFTkEeyrP50YGbMAsQ" specification="" name="Wait for alignment" incomingTransitions="_0EtfgFTkEeyrP50YGbMAsQ _12wr8FTkEeyrP50YGbMAsQ _exuCgFYiEeyOA6EyQzIeow _9I4_0FYjEeyOA6EyQzIeow _qkbpUFYnEeyOA6EyQzIeow _w0BecFYvEeyOA6EyQzIeow _ZpyawFkUEeyzM-gyIv-DQw">
         <outgoingTransitions xmi:id="_7E4WoFTkEeyrP50YGbMAsQ" specification="// Found the magic number 0.5. When moving forward after rotation, +0.5 in yaw seems to be added..&#xA;[angle_diff(imu.yaw, target_yaw) &lt;= limitDegreeLow || angle_diff(imu.yaw, target_yaw) > rotationChange ] / raise turned; raise rotation_aligned" target="_PnDmyk_uEeyhHuGFp4b_aQ"/>
         <outgoingTransitions xmi:id="_exuCgFYiEeyOA6EyQzIeow" specification="[abs(output.rotation) == baseRotation &amp;&amp; angle_diff(imu.yaw, target_yaw) &lt;= 20.0] / &#xA;output.rotation = output.rotation / 2" target="_xjijQFTkEeyrP50YGbMAsQ"/>
         <outgoingTransitions xmi:id="_9I4_0FYjEeyOA6EyQzIeow" specification="[abs(output.rotation) == baseRotation/2 &amp;&amp; angle_diff(imu.yaw, target_yaw) &lt;= 5] / &#xA;output.rotation = output.rotation / 2" target="_xjijQFTkEeyrP50YGbMAsQ"/>
@@ -126,8 +126,8 @@
         <outgoingTransitions xmi:id="_ZpyawFkUEeyzM-gyIv-DQw" specification="tick / rotationChange = angle_diff(imu.yaw, target_yaw) " target="_xjijQFTkEeyrP50YGbMAsQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_wNMvgFTxEeyrP50YGbMAsQ" specification="" name="Aligned" incomingTransitions="_TTOeEFTyEeyrP50YGbMAsQ _nBJkwFTzEeyrP50YGbMAsQ _QACcoFZ_EeyGAJSOmNPqbA">
-        <outgoingTransitions xmi:id="_mox7UFTjEeyrP50YGbMAsQ" specification="[laserDistance.dLeftMin > grid.gridSize  &#xA;&#x9;//TODO: maybe change to rightmin&#xA;&#x9;//laserDistance.dRightMax &lt; grid.gridSize&#xA;]" target="_iVaosFTjEeyrP50YGbMAsQ"/>
-        <outgoingTransitions xmi:id="_ASGe4FTkEeyrP50YGbMAsQ" specification="//TODO: maybe change to leftmin&#xA;[laserDistance.dLeftMax &lt; grid.gridSize &#xA;&#x9;//laserDistance.dRightMax > grid.gridSize&#xA;]" target="_kTL88FTjEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_mox7UFTjEeyrP50YGbMAsQ" specification="[laserDistance.d90 > grid.gridSize  &#xA;&#x9;//TODO: maybe change to rightmin&#xA;&#x9;//laserDistance.dRightMax &lt; grid.gridSize&#xA;]" target="_iVaosFTjEeyrP50YGbMAsQ"/>
+        <outgoingTransitions xmi:id="_ASGe4FTkEeyrP50YGbMAsQ" specification="[laserDistance.d90 &lt; grid.gridSize ]" target="_kTL88FTjEeyrP50YGbMAsQ"/>
       </vertices>
       <vertices xsi:type="sgraph:State" xmi:id="_eQ8v4FTyEeyrP50YGbMAsQ" specification="" name="Re-align back" incomingTransitions="_kMln4FTyEeyrP50YGbMAsQ">
         <outgoingTransitions xmi:id="_nBJkwFTzEeyrP50YGbMAsQ" specification="[laserDistance.dFrontMean > (grid.gridSize/2)] &#xA;/ &#xA;output.speed = 0.0" target="_wNMvgFTxEeyrP50YGbMAsQ"/>
@@ -1328,7 +1328,7 @@
     <edges xmi:id="_12xTAFTkEeyrP50YGbMAsQ" type="Transition" element="_12wr8FTkEeyrP50YGbMAsQ" source="_kTNyIFTjEeyrP50YGbMAsQ" target="_xjkYcFTkEeyrP50YGbMAsQ">
       <children xsi:type="notation:DecorationNode" xmi:id="_12xTBFTkEeyrP50YGbMAsQ" type="TransitionExpression">
         <styles xsi:type="notation:ShapeStyle" xmi:id="_12xTBVTkEeyrP50YGbMAsQ"/>
-        <layoutConstraint xsi:type="notation:Location" xmi:id="_12xTBlTkEeyrP50YGbMAsQ" x="78" y="39"/>
+        <layoutConstraint xsi:type="notation:Location" xmi:id="_12xTBlTkEeyrP50YGbMAsQ" x="-15" y="11"/>
       </children>
       <styles xsi:type="notation:ConnectorStyle" xmi:id="_12xTAVTkEeyrP50YGbMAsQ" routing="Rectilinear" lineColor="4210752"/>
       <styles xsi:type="notation:FontStyle" xmi:id="_12xTA1TkEeyrP50YGbMAsQ" fontName="Verdana"/>
