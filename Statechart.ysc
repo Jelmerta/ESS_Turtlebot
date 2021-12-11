@@ -93,7 +93,7 @@
             <outgoingTransitions xmi:id="_qdiqwFnjEey1C5t2E5sVOw" specification="[laserDistance.dLeftMin > grid.gridSize - 0.05 || laserDistance.dFrontMax &lt; grid.gridSize/2-0.01] / raise moved_forward" target="_ZzDDq1njEey1C5t2E5sVOw"/>
           </vertices>
           <vertices xsi:type="sgraph:State" xmi:id="_ZyykvFnjEey1C5t2E5sVOw" specification="" name="Min one cell" incomingTransitions="_ZzAnO1njEey1C5t2E5sVOw">
-            <outgoingTransitions xmi:id="_Zy9j7FnjEey1C5t2E5sVOw" specification="[laserDistance.dLeftMin &lt; grid.gridSize*0.75]&#xA;/ raise switch_wall_detection" target="_Zy-yBVnjEey1C5t2E5sVOw"/>
+            <outgoingTransitions xmi:id="_Zy9j7FnjEey1C5t2E5sVOw" specification="[laserDistance.d90 &lt; grid.gridSize*0.75]&#xA;/ raise switch_wall_detection" target="_Zy-yBVnjEey1C5t2E5sVOw"/>
             <outgoingTransitions xmi:id="_ZzBOS1njEey1C5t2E5sVOw" specification="// When moving one cell, also check if there is no wall&#xA;[laserDistance.dFrontMax &lt; grid.gridSize/2-0.01] / raise switch_wall_detection; raise moved_forward" target="_ZzDDq1njEey1C5t2E5sVOw"/>
           </vertices>
         </regions>
