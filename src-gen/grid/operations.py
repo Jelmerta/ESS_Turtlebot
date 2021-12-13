@@ -12,3 +12,9 @@ class Callback:
         if d > 180:
             return 360 - d
         return d
+
+    def cos(self, theta):
+        return math.cos(math.radians(theta))
+
+    def sin(self, theta):
+        return math.sin(math.radians(theta))

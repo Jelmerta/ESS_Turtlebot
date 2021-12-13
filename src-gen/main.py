@@ -130,6 +130,17 @@ class SCTConnect():
             print(f'Wall front: {self.sm.grid.wall_front}, right: {self.sm.grid.wall_right}, '
                     f'back: {self.sm.grid.wall_back}, left: {self.sm.grid.wall_left}')
             print(f'zeroX: {self.sm.start_pos.zero_x:.3f}, zeroY: {self.sm.start_pos.zero_y:.3f} zeroSouthDegree: {self.sm.start_pos.zero_south_degree:.3f}')
+            print(f'mazeRotation: {self.sm._Model__maze_rotation:.3f}')
+            print(f'odomXNormalized: {self.sm._Model__normalized_odom_x:.3f}')
+            print(f'odomYNormalized: {self.sm._Model__normalized_odom_y:.3f}')
+            print(f'odomXAdjusted: {self.sm._Model__adjusted_odom_x:.3f}')
+            print(f'odomYAdjusted: {self.sm._Model__adjusted_odom_y:.3f}')
+            print(f'yawAdjusted: {self.sm._Model__adjusted_yaw:.3f}')
+            print(f'cellMiddleX: {self.sm._Model__current_cell_x:.3f}')
+            print(f'cellMiddleY: {self.sm._Model__current_cell_y:.3f}')
+            print("yaw aligned: ", self.sm._Model__yaw_aligned)
+            print("position aligned: ", self.sm._Model__position_aligned)
+
             # print("Active state: ", self.sm.__state_vector)
 
         # Print the final values and finish
